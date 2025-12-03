@@ -4,7 +4,7 @@ set -euo pipefail
 add_modules_to_mkinitcpio() {
     echo "==> Adding Nvidia + CRC32C modules to mkinitcpio.conf..."
 
-    MODULES_TO_ADD=("nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" "crc32c-intel")
+    MODULES_TO_ADD=("nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" "crc32c")
 
     # Ensure MODULES= exists
     if ! grep -q "^MODULES=" /etc/mkinitcpio.conf; then
@@ -33,7 +33,7 @@ echo "==> Installing CachyOS Bore kernel..."
 sudo pacman -S --noconfirm linux-cachyos-bore linux-cachyos-bore-headers
 
 echo "==> Installing crc32c-intel..."
-sudo pacman -S --noconfirm crc32c-intel
+sudo pacman -S --noconfirm crc32c
 
 echo "==> Installing git..."
 sudo pacman -S --noconfirm git
