@@ -26,6 +26,7 @@ How does this optimize my arch install?
 
 Installation
 - Clone this repository. git clone https://github.com/beters02/archtimize
-- 
+- cd archtimize
+- ./archtimize.sh
 
 Be sure you add game-performance to your launch options for all of your games to reap the benefits of the power profile optimizations!
