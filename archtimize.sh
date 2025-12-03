@@ -32,9 +32,6 @@ sudo pacman -Syyu --noconfirm
 echo "==> Installing CachyOS Bore kernel..."
 sudo pacman -S --noconfirm linux-cachyos-bore linux-cachyos-bore-headers
 
-echo "==> Installing crc32c-intel..."
-sudo pacman -S --noconfirm crc32c
-
 echo "==> Installing git..."
 sudo pacman -S --noconfirm git
 
