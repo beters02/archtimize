@@ -21,6 +21,7 @@ What does this install?
 - KDE-System packages
 - Some basic packages: firefox, nano
 - If you have Btrfs, snapper is installed and backups are automatically created before running archtimize.
+- NetworkManager if you do not already have it
 
 How does this optimize my arch install?
 - wip

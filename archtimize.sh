@@ -74,7 +74,7 @@ get_stage() {
 }
 
 # SNAPPER SETUP
-snapper_setup() {
+setup_snapper() {
     echo -e "${GREEN_BOLD} ==> Getting filesystem type...${RESET}"
     FILESYSTEM_TYPE=$(findmnt -n -o FSTYPE "/")
 
@@ -138,7 +138,7 @@ stage_1() {
     echo -e "${GREEN_BOLD} ==> Starting in 3 seconds...${RESET}"
     sleep 3
 
-    snapper_setup
+    setup_snapper
 
     echo -e "${GREEN_BOLD} ==> Installing CachyOS repositories...${RESET}"
     sudo -u "$REALUSER" curl -L https://mirror.cachyos.org/cachyos-repo.tar.xz -o cachyos-repo.tar.xz
@@ -183,6 +183,12 @@ stage_2() {
 
     echo -e "${GREEN_BOLD} ==> Making some choices for you...${RESET}"
     pacman -S --noconfirm konsole kate spectacle ark gwenview kde-system firefox nano
+    
+    if ! pacman -Q "networkmanager" &> /dev/null; then
+        echo -e "${GREEN_BOLD} ==> Installing NetworkManager...${RESET}"
+        pacman -S --noconfirm networkmanager
+        systemctl enable NetworkManager.service
+    fi
 
     echo -e "${GREEN_BOLD} ==> Installing yay...${RESET}"
     pacman -S --needed --noconfirm git base-devel
