@@ -1,11 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-if [[ $EUID -ne 0 ]]; then
-    echo "This installer must be run with sudo or as root."
-    exit 1
-fi
-
 GREEN_BOLD="\e[1;32m"
 RESET="\e[0m"
 
@@ -16,13 +11,13 @@ add_modules_to_mkinitcpio() {
 
     # Ensure MODULES= exists
     if ! grep -q "^MODULES=" /etc/mkinitcpio.conf; then
-        echo "MODULES=()" | tee -a /etc/mkinitcpio.conf
+        echo "MODULES=()" | sudo tee -a /etc/mkinitcpio.conf
     fi
 
     # Append modules safely
     for mod in "${MODULES_TO_ADD[@]}"; do
         if ! grep -q "$mod" /etc/mkinitcpio.conf; then
-            sed -i "s/^MODULES=(/MODULES=($mod /" /etc/mkinitcpio.conf
+            sudo sed -i "s/^MODULES=(/MODULES=($mod /" /etc/mkinitcpio.conf
         fi
     done
 }
@@ -31,20 +26,23 @@ echo -e "${GREEN_BOLD} ==> Installing CachyOS repositories...${RESET}"
 curl -L https://mirror.cachyos.org/cachyos-repo.tar.xz -o cachyos-repo.tar.xz
 tar xvf cachyos-repo.tar.xz
 cd cachyos-repo
-./cachyos-repo.sh
+sudo ./cachyos-repo.sh
 cd ..
 
 echo -e "${GREEN_BOLD} ==> Syncing pacman...${RESET}"
-pacman -Syyu --noconfirm
+sudo pacman -Syyu --noconfirm
 
 echo -e "${GREEN_BOLD} ==> Installing CachyOS Bore kernel...${RESET}"
-pacman -S --noconfirm linux-cachyos-bore linux-cachyos-bore-headers
+sudo pacman -S --noconfirm linux-cachyos-bore linux-cachyos-bore-headers
+
+echo -e "${GREEN_BOLD} ==> Installing git...${RESET}"
+sudo pacman -S --noconfirm git
 
 echo -e "${GREEN_BOLD} ==> Cloning CachyOS settings...${RESET}"
 git clone https://github.com/CachyOS/CachyOS-Settings
 
 echo -e "${GREEN_BOLD} ==> Installing yay...${RESET}"
-pacman -S --needed --noconfirm git base-devel
+sudo pacman -S --needed --noconfirm git base-devel
 git clone https://aur.archlinux.org/yay-bin.git
 cd yay-bin
 makepkg -si --noconfirm
@@ -60,26 +58,26 @@ lune run main.luau
 cd ..
 
 echo -e "${GREEN_BOLD} ==> Detecting hardware & installing Nvidia drivers...${RESET}"
-chwd -a pci nonfree 0300
+sudo chwd -a pci nonfree 0300
 
 echo -e "${GREEN_BOLD} ==> Updating mkinitcpio.conf...${RESET}"
 add_modules_to_mkinitcpio
 
 echo -e "${GREEN_BOLD} ==> Regenerating initramfs...${RESET}"
-mkinitcpio -P
+sudo mkinitcpio -P
 
 echo -e "${GREEN_BOLD} ==> Installing Plasma, Wayland, and SDDM...${RESET}"
-pacman -S --noconfirm plasma-wayland-session plasma sddm
-systemctl enable sddm
+sudo pacman -S --noconfirm plasma-wayland-session plasma sddm
+sudo systemctl enable sddm
 
 echo -e "${GREEN_BOLD} ==> Making some choices for you...${RESET}"
-pacman -S --noconfirm konsole kate spectacle ark gwenview
+sudo pacman -S --noconfirm konsole kate spectacle ark gwenview
 
 echo -e "${GREEN_BOLD} ==> Some more choices...${RESET}"
-pacman -S --noconfirm kde-system
+sudo pacman -S --noconfirm kde-system
 
 echo -e "${GREEN_BOLD} ==> Installing Basic Packages...${RESET}"
-pacman -S firefox
+sudo pacman -S firefox
 
 echo -e "${GREEN_BOLD} ==> Installation finished. Rebooting...${RESET}"
 reboot
