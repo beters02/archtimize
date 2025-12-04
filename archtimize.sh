@@ -31,54 +31,28 @@ copy_installer_dir() {
     chmod +x "$INSTALLER_TARGET"
 }
 
-insert_pam_login() {
-    local hook="session optional pam_exec.so /usr/local/bin/archtimize/pam-wrapper.sh"
+# CREATE SYSTEMD SERVICE
+create_systemd_service() {
+    echo -e "${GREEN_BOLD} ==> Creating systemd auto-resume service...${RESET}"
 
-    # Avoid duplicates
-    grep -q "pam-wrapper.sh" /etc/pam.d/login && return
+    cat <<EOF > /etc/systemd/system/archtimize.service
+[Unit]
+Description=Run Archtimize Stage 2 After Login
+After=graphical-session.target
+Requires=graphical-session.target
 
-    # Insert BEFORE the final 'session' line
-    sed -i "/^session/ i $hook" /etc/pam.d/login
-}
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/archtimize/archtimize.sh
+RemainAfterExit=yes
 
-# Autoresume with pam
-install_pam_hook() {
-    echo -e "${GREEN_BOLD} ==> Installing PAM auto-resume hook...${RESET}"
-
-    cat <<EOF >"$INSTALL_DIR/pam-wrapper.sh"
-#!/bin/bash
-
-STATE_FILE="/var/lib/archtimize/state"
-
-# Only run stage 2 if stage=2
-if [[ -f "\$STATE_FILE" ]] && [[ "\$(cat "\$STATE_FILE")" == "2" ]]; then
-    exec /usr/local/bin/archtimize/archtimize.sh
-fi
-
-exit 0
+[Install]
+WantedBy=default.target
 EOF
-    chmod +x "$INSTALL_DIR/pam-wrapper.sh"
 
-    # Add hook to TTY login
-    insert_pam_login
-
-    # Add hook to SDDM
-    if [[ -f /etc/pam.d/sddm ]] && ! grep -q pam-wrapper.sh /etc/pam.d/sddm; then
-        sed -i '/^session.*pam_unix.so/i session optional pam_exec.so /usr/local/bin/archtimize/pam-wrapper.sh' /etc/pam.d/sddm
-    fi
-
-    echo -e "${GREEN_BOLD} ==> PAM hooks installed.${RESET}"
+    systemctl daemon-reload
+    systemctl enable archtimize-login.service
 }
-
-remove_pam_hook() {
-    echo -e "${GREEN_BOLD} ==> Removing PAM auto-resume hook...${RESET}"
-
-    sed -i '/pam-wrapper.sh/d' /etc/pam.d/login
-    sed -i '/pam-wrapper.sh/d' /etc/pam.d/sddm
-
-    rm -f "$INSTALL_DIR/pam-wrapper.sh"
-}
-
 
 # STATES
 create_state_file() {
@@ -104,15 +78,12 @@ setup_snapper() {
     echo -e "${GREEN_BOLD} ==> Filesystem type is ${FILESYSTEM_TYPE}...${RESET}"
 
     if [[ $FILESYSTEM_TYPE == "btrfs" ]]; then
-        echo -e "${GREEN_BOLD} ==> Checking if snapper needs to be set up...${RESET}"
-        if ! pacman -Q "snapper" &> /dev/null; then
-            echo -e "${GREEN_BOLD} ==> Installing snapper...${RESET}"
-            pacman -S --noconfirm --needed snapper
+        echo -e "${GREEN_BOLD} ==> Installing snapper...${RESET}"
+        pacman -S --noconfirm --needed snapper
 
-            echo -e "${GREEN_BOLD} ==> Creating snapper configuration for root and home...${RESET}"
-            snapper -c root create-config /
-            snapper -c home create-config /home
-        fi
+        echo -e "${GREEN_BOLD} ==> Creating snapper configuration for root and home...${RESET}"
+        snapper -c root create-config /
+        snapper -c home create-config /home
 
         echo -e "${GREEN_BOLD} ==> Creating snapper backup of root and home...${RESET}"
         snapper -c root create --description "Pre Archtimize Backup"
@@ -190,6 +161,12 @@ stage_1() {
     cd ..
     rm -rf yay-bin
 
+    echo -e "${GREEN_BOLD} ==> Installing Lune...${RESET}"
+    sudo -u "$REALUSER" yay -S --noconfirm lune-bin
+
+    echo -e "${GREEN_BOLD} ==> Cloning CachyOS settings...${RESET}"
+    sudo -u "$REALUSER" git clone https://github.com/CachyOS/CachyOS-Settings
+
     echo -e "${GREEN_BOLD} ==> Updating mkinitcpio modules...${RESET}"
     add_modules_to_mkinitcpio
 
@@ -199,11 +176,7 @@ stage_1() {
     echo -e "${GREEN_BOLD} ==> Updating grub...${RESET}"
     grub-mkconfig -o /boot/grub/grub.cfg
 
-    echo "$REALUSER ALL=(ALL) NOPASSWD: /usr/bin/pacman" >/etc/sudoers.d/99-archtimize-nopasswd
-    chmod 440 /etc/sudoers.d/99-archtimize-nopasswd
-
     echo -e "${GREEN_BOLD} ==> Stage 1 complete — rebooting in 3 seconds...${RESET}"
-    install_pam_hook
     set_stage 2
     sleep 3
     reboot
@@ -228,22 +201,18 @@ stage_2() {
         systemctl enable NetworkManager.service
     fi
 
-    echo -e "${GREEN_BOLD} ==> Installing Lune...${RESET}"
-    sudo -u "$REALUSER" yay -S --noconfirm lune-bin
-
-    echo -e "${GREEN_BOLD} ==> Cloning CachyOS settings...${RESET}"
-    sudo -u "$REALUSER" git clone https://github.com/CachyOS/CachyOS-Settings
-
     echo -e "${GREEN_BOLD} ==> Running CachyOS settings installer...${RESET}"
     cd install-cachyos-settings
     lune run main.luau
     cd ..
 
-    echo -e "${GREEN_BOLD} ==> Running final cleanup...${RESET}"
-    remove_pam_hook
-    cleanup_installer
+    echo -e "${GREEN_BOLD} ==> Cleaning systemd service...${RESET}"
+    systemctl disable archtimize.service
+    rm /etc/systemd/system/archtimize.service
+    systemctl daemon-reload
 
-    rm -f /etc/sudoers.d/99-archtimize-nopasswd
+    echo -e "${GREEN_BOLD} ==> Running final cleanup...${RESET}"
+    cleanup_installer
 
     echo -e "${GREEN_BOLD} ==> Installation fully complete — rebooting into KDE!${RESET}"
     set_stage done
@@ -262,6 +231,7 @@ fi
 
 if [[ "$archtimize_states_exists" == "0" || $(get_stage) == "1" ]]; then
     copy_installer_dir
+    create_systemd_service
     create_state_file
 fi
 
@@ -270,7 +240,6 @@ case "$(get_stage)" in
     2) stage_2 ;;
     done)
         echo -e "${GREEN_BOLD}Archtimize installation is complete.${RESET}"
-        exit 0
         ;;
     *)
         echo "Unknown installer state."
