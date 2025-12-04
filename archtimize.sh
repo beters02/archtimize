@@ -47,7 +47,7 @@ ExecStart=/usr/local/bin/archtimize/archtimize.sh
 RemainAfterExit=yes
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target
 EOF
 
     systemctl daemon-reload
