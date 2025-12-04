@@ -35,24 +35,30 @@ copy_installer_dir() {
 install_pam_hook() {
     echo -e "${GREEN_BOLD} ==> Installing PAM auto-resume hook...${RESET}"
 
-    cat <<EOF >/etc/pam.d/archtimize
-session optional pam_exec.so seteuid /usr/local/bin/archtimize/pam-wrapper.sh
-EOF
-
+    # Install wrapper script
+    mkdir -p "$INSTALL_DIR"
     cat <<EOF >"$INSTALL_DIR/pam-wrapper.sh"
 #!/bin/bash
 
 STATE_FILE="/var/lib/archtimize/state"
 
-# Only run stage 2 if state=2
 if [[ -f "\$STATE_FILE" ]] && [[ \$(cat "\$STATE_FILE") == "2" ]]; then
     exec /usr/local/bin/archtimize/archtimize.sh
 fi
 EOF
-
     chmod +x "$INSTALL_DIR/pam-wrapper.sh"
 
-    echo -e "${GREEN_BOLD} ==> PAM hook installed.${RESET}"
+    # Add hook to TTY login
+    if ! grep -q pam-wrapper.sh /etc/pam.d/login; then
+        echo "session optional pam_exec.so seteuid /usr/local/bin/archtimize/pam-wrapper.sh" >> /etc/pam.d/login
+    fi
+
+    # Add hook to SDDM (graphical login)
+    if ! grep -q pam-wrapper.sh /etc/pam.d/sddm; then
+        echo "session optional pam_exec.so seteuid /usr/local/bin/archtimize/pam-wrapper.sh" >> /etc/pam.d/sddm
+    fi
+
+    echo -e "${GREEN_BOLD} ==> PAM hooks installed.${RESET}"
 }
 
 remove_pam_hook() {
