@@ -35,6 +35,10 @@ copy_installer_dir() {
 create_systemd_service() {
     echo -e "${GREEN_BOLD} ==> Creating systemd auto-resume service...${RESET}"
 
+    if [[ -f "/etc/systemd/system/archtimize-login.service" ]]; then
+        return
+    fi
+
     cat <<EOF > /etc/systemd/system/archtimize-login.service
 [Unit]
 Description=Run Archtimize Stage 2 After Login
