@@ -1,15 +1,15 @@
 Optimize your arch install with a script.
 
 **<ins>Run this on a fresh, vanilla arch install.</ins>**
-*This script will install custom drivers, therefore you cannot have previously installed nvidia drivers*
+*This script will install custom drivers, therefore you cannot have previously installed graphics drivers*
 
 Prerequisites
 - Git must be installed
-- No previously installed nvidia drivers
+- No previously installed graphics drivers
 - No previously installed graphical environment or window manager
 - Btrfs filesystem
 - Swap on zram
-- Grub bootloader is preferred
+- Grub bootloader (support for systemd-boot coming soon)
 
 What does this install?
 - CachyOS optimized repositories - [wiki](https://wiki.cachyos.org/features/optimized_repos/)
