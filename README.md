@@ -16,7 +16,7 @@ What does this install?
 - CachyOS linux kernel - [repo](https://github.com/CachyOS/linux-cachyos) [wiki](https://wiki.cachyos.org/features/kernel/)
 - CachyOS settings - [repo](https://github.com/CachyOS/CachyOS-Settings) [wiki](https://wiki.cachyos.org/features/optimized_repos/)
 - CachyOS NVIDIA Drivers
-- Wayland and KDE Plasma
+- Wayland and KDE Plasma (plasma-desktop)
 - Minimal desktop KDE packages (dolphin, konsole, kate, spectacle, ark, gwenview)
 - KDE-System packages
 - Btrfs snapshot management packages: snapper

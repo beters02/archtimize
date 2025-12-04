@@ -154,7 +154,7 @@ stage_2() {
     sleep 3
 
     echo -e "${GREEN_BOLD} ==> Installing plasma, wayland and sddm...${RESET}"
-    pacman -S --noconfirm plasma-wayland-session plasma sddm
+    pacman -S --noconfirm plasma-desktop sddm
     systemctl enable sddm
 
     echo -e "${GREEN_BOLD} ==> Making some choices for you...${RESET}"
