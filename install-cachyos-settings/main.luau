@@ -48,5 +48,14 @@ for i, v in pairs(move) do
     if fs.isFile(v.to) then
         safeMove(v.to, v.to .. "_cos_backup") -- create a backup of the current setting file
     end
-    safeMove(v.from, v.to)
+
+    local ok, errmsg = pcall(function()
+        safeMove(v.from, v.to)
+    end)
+    if not ok then
+        print(v.from)
+        print(v.to)
+        error(errmsg)
+    end
+    
 end

@@ -1,15 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
-if [[ $EUID -ne 0 ]]; then
-    echo "This installer must be run with sudo or as root."
-    echo "Unsafe commands will automatically be ran in non-sudo."
-    exit 1
-fi
-
 REALUSER="${SUDO_USER:-$USER}"
 GREEN_BOLD="\e[1;32m"
 RESET="\e[0m"
+
+if [[ $EUID -ne 0 ]]; then
+    echo -e "\e[1;31mThis installer must be run with sudo or as root."
+    echo -e "\e[4;32mUnsafe commands will automatically be ran in non-sudo."
+    exit 1
+fi
 
 add_modules_to_mkinitcpio() {
     echo -e "${GREEN_BOLD} ==> Adding Nvidia + CRC32C modules to mkinitcpio.conf...${RESET}"
