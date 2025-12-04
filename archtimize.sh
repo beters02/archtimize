@@ -3,6 +3,7 @@ set -euo pipefail
 
 if [[ $EUID -ne 0 ]]; then
     echo "This installer must be run with sudo or as root."
+    echo "Unsafe commands will automatically be ran in non-sudo."
     exit 1
 fi
 
@@ -53,7 +54,7 @@ cd ..
 rm -rf yay-bin
 
 echo -e "${GREEN_BOLD} ==> Installing Lune from AUR...${RESET}"
-yay -S --noconfirm lune-bin
+sudo -u "$REALUSER" yay -S --noconfirm lune-bin
 
 echo -e "${GREEN_BOLD} ==> Running CachyOS settings installer with Lune...${RESET}"
 cd install-cachyos-settings
