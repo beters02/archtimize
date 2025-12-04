@@ -29,8 +29,8 @@ add_modules_to_mkinitcpio() {
 }
 
 echo -e "${GREEN_BOLD} ==> Installing CachyOS repositories...${RESET}"
-curl -L https://mirror.cachyos.org/cachyos-repo.tar.xz -o cachyos-repo.tar.xz
-tar xvf cachyos-repo.tar.xz
+sudo -u "$REALUSER" curl -L https://mirror.cachyos.org/cachyos-repo.tar.xz -o cachyos-repo.tar.xz
+sudo -u "$REALUSER" tar xvf cachyos-repo.tar.xz
 cd cachyos-repo
 ./cachyos-repo.sh
 cd ..
@@ -42,11 +42,11 @@ echo -e "${GREEN_BOLD} ==> Installing CachyOS Bore kernel...${RESET}"
 pacman -S --noconfirm linux-cachyos-bore linux-cachyos-bore-headers
 
 echo -e "${GREEN_BOLD} ==> Cloning CachyOS settings...${RESET}"
-git clone https://github.com/CachyOS/CachyOS-Settings
+sudo -u "$REALUSER" git clone https://github.com/CachyOS/CachyOS-Settings
 
 echo -e "${GREEN_BOLD} ==> Installing yay...${RESET}"
 pacman -S --needed --noconfirm git base-devel
-git clone https://aur.archlinux.org/yay-bin.git
+sudo -u "$REALUSER" git clone https://aur.archlinux.org/yay-bin.git
 cd yay-bin
 sudo -u "$REALUSER" makepkg -si --noconfirm
 cd ..

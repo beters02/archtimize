@@ -6,7 +6,7 @@ local function recurse(fromDir, toDir, v)
     local newToDir = toDir.."/"..v
     if fs.isDir(newFromDir) then
 
-        -- ensure all directories exist
+        -- ensure all to directories exist
         if not fs.isDir(newToDir) then
             fs.writeDir(newToDir)
         end
