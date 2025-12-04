@@ -34,7 +34,7 @@ local function recurse(fromDir, toDir, v)
 end
 
 local function getMovePaths(folderName)
-    for i, v in pairs(fs.readDir("../CachyOS-Settings/usr")) do
+    for i, v in pairs(fs.readDir("../CachyOS-Settings/"..folderName)) do
         local fromDir = "../CachyOS-Settings/"..folderName
         local toDir = "/"..folderName
         recurse(fromDir, toDir, v)
