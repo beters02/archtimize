@@ -38,8 +38,9 @@ create_systemd_service() {
     cat <<EOF > /etc/systemd/system/archtimize.service
 [Unit]
 Description=Archtimize Installer After Reboot
-After=getty@tty1.service
+After=network-online.target getty@tty1.service
 Requires=getty@tty1.service
+Wants=network-online.target
 
 [Service]
 Type=oneshot
