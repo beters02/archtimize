@@ -61,10 +61,14 @@ EOF
 }
 
 remove_pam_hook() {
-    echo -e "${GREEN_BOLD} ==> Removing PAM hook...${RESET}"
-    rm -f /etc/pam.d/archtimize
+    echo -e "${GREEN_BOLD} ==> Removing PAM auto-resume hook...${RESET}"
+
+    sed -i '/pam-wrapper.sh/d' /etc/pam.d/login
+    sed -i '/pam-wrapper.sh/d' /etc/pam.d/sddm
+
     rm -f "$INSTALL_DIR/pam-wrapper.sh"
 }
+
 
 # STATES
 create_state_file() {
