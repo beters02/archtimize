@@ -35,15 +35,14 @@ copy_installer_dir() {
 create_systemd_service() {
     echo -e "${GREEN_BOLD} ==> Creating systemd auto-resume service...${RESET}"
 
-    if [[ -f "/etc/systemd/system/archtimize-login.service" ]]; then
-        return
-    fi
+    REALUSER="${SUDO_USER:-$USER}"
+    USER_UID=$(id -u "$REALUSER")
 
-    cat <<EOF > /etc/systemd/system/archtimize-login.service
+    cat <<EOF >/etc/systemd/system/archtimize-login.service
 [Unit]
-Description=Run Archtimize Stage 2 After Login
-After=graphical-session.target
-Requires=graphical-session.target
+Description=Archtimize Resume After User Login
+After=user@${USER_UID}.service
+Requires=user@${USER_UID}.service
 
 [Service]
 Type=oneshot
@@ -51,7 +50,7 @@ ExecStart=/usr/local/bin/archtimize/archtimize.sh
 RemainAfterExit=yes
 
 [Install]
-WantedBy=graphical-session.target
+WantedBy=multi-user.target
 EOF
 
     systemctl daemon-reload
