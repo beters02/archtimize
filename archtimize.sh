@@ -31,6 +31,16 @@ copy_installer_dir() {
     chmod +x "$INSTALLER_TARGET"
 }
 
+insert_pam_login() {
+    local hook="session optional pam_exec.so /usr/local/bin/archtimize/pam-wrapper.sh"
+
+    # Avoid duplicates
+    grep -q "pam-wrapper.sh" /etc/pam.d/login && return
+
+    # Insert BEFORE the final 'session' line
+    sed -i "/^session/ i $hook" /etc/pam.d/login
+}
+
 # Autoresume with pam
 install_pam_hook() {
     echo -e "${GREEN_BOLD} ==> Installing PAM auto-resume hook...${RESET}"
@@ -50,9 +60,7 @@ EOF
     chmod +x "$INSTALL_DIR/pam-wrapper.sh"
 
     # Add hook to TTY login
-    if ! grep -q pam-wrapper.sh /etc/pam.d/login; then
-        echo "session optional pam_exec.so /usr/local/bin/archtimize/pam-wrapper.sh" >> /etc/pam.d/login
-    fi
+    insert_pam_login
 
     # Add hook to SDDM
     if [[ -f /etc/pam.d/sddm ]] && ! grep -q pam-wrapper.sh /etc/pam.d/sddm; then
