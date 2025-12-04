@@ -37,13 +37,16 @@ create_systemd_service() {
 
     cat <<EOF > /etc/systemd/system/archtimize.service
 [Unit]
-Description=Archtimize Installer (Auto Resume After Reboot)
+Description=Archtimize Installer After Reboot
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=oneshot
 ExecStart=$INSTALLER_TARGET
+StandardOutput=tty
+StandardError=tty
+TTYPath=/dev/tty1
 RemainAfterExit=yes
 
 [Install]
@@ -194,9 +197,13 @@ stage_2() {
 }
 
 # MAIN
-copy_installer_dir
-create_systemd_service
-create_state_file
+stage=$(get_stage)
+
+if [[ stage == "1" ]]; then
+    copy_installer_dir
+    create_systemd_service
+    create_state_file
+fi
 
 case "$(get_stage)" in
     1) stage_1 ;;

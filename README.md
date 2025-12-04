@@ -7,7 +7,7 @@ Prerequisites
 - Git must be installed
 - No previously installed graphics drivers
 - No previously installed graphical environment or window manager
-- Btrfs filesystem
+- Btrfs preferred
 - Swap on zram
 - Grub bootloader (support for systemd-boot coming soon)
 
@@ -19,6 +19,7 @@ What does this install?
 - Wayland and KDE Plasma
 - Minimal desktop KDE packages (dolphin, konsole, kate, spectacle, ark, gwenview)
 - KDE-System packages
+- Btrfs snapshot management packages: snapper
 - Some basic packages: firefox, nano
 
 How does this optimize my arch install?
