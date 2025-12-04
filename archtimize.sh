@@ -48,6 +48,9 @@ Requires=user@${USER_UID}.service
 Type=oneshot
 ExecStart=/usr/local/bin/archtimize/archtimize.sh
 RemainAfterExit=yes
+StandardOutput=tty
+StandardError=tty
+TTYPath=/dev/tty1
 
 [Install]
 WantedBy=multi-user.target
@@ -190,6 +193,7 @@ stage_1() {
 
 # STAGE 2
 stage_2() {
+    cd /usr/local/bin/archtimize
     echo -e "${GREEN_BOLD} ==> Stage 2: GUI + Packages + CachyOS Settings${RESET}"
     echo -e "${GREEN_BOLD} ==> Starting in 3 seconds...${RESET}"
     sleep 3
@@ -213,8 +217,8 @@ stage_2() {
     cd ..
 
     echo -e "${GREEN_BOLD} ==> Cleaning systemd service...${RESET}"
-    systemctl disable archtimize.service
-    rm /etc/systemd/system/archtimize.service
+    systemctl disable archtimize-login.service
+    rm /etc/systemd/system/archtimize-login.service
     systemctl daemon-reload
 
     echo -e "${GREEN_BOLD} ==> Running final cleanup...${RESET}"
