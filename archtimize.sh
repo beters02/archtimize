@@ -171,6 +171,9 @@ stage_2() {
     echo -e "${GREEN_BOLD} ==> Installing Lune...${RESET}"
     sudo -u "$REALUSER" yay -S --noconfirm lune-bin
 
+    echo -e "${GREEN_BOLD} ==> Cloning CachyOS settings...${RESET}"
+    sudo -u "$REALUSER" git clone https://github.com/CachyOS/CachyOS-Settings
+
     echo -e "${GREEN_BOLD} ==> Running CachyOS settings installer...${RESET}"
     cd install-cachyos-settings
     lune run main.luau

@@ -14,13 +14,6 @@ fi
 
 #
 
-create_state_dir() {
-    mkdir -p /var/lib/archtimize
-    if [[ ! -f "$STATE_FILE" ]]; then
-        echo "1" > "$STATE_FILE"
-    fi
-}
-
 #
 
 add_modules_to_mkinitcpio() {
@@ -42,10 +35,6 @@ add_modules_to_mkinitcpio() {
 }
 
 #
-
-stage_1() {
-    
-}
 
 echo -e "${GREEN_BOLD} ==> Installing CachyOS repositories...${RESET}"
 sudo -u "$REALUSER" curl -L https://mirror.cachyos.org/cachyos-repo.tar.xz -o cachyos-repo.tar.xz
