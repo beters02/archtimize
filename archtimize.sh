@@ -72,9 +72,9 @@ get_stage() {
 
 # MKINITCPIO MODULES
 add_modules_to_mkinitcpio() {
-    echo -e "${GREEN_BOLD} ==> Adding Nvidia + CRC32C modules to mkinitcpio.conf...${RESET}"
+    echo -e "${GREEN_BOLD} ==> Adding CRC32C modules to mkinitcpio.conf...${RESET}"
 
-    MODULES=("nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" "crc32c")
+    MODULES=("crc32c")
 
     if ! grep -q "^MODULES=" /etc/mkinitcpio.conf; then
         echo "MODULES=()" >> /etc/mkinitcpio.conf
@@ -109,7 +109,7 @@ cleanup_installer() {
 
 # STAGE 1
 stage_1() {
-    echo -e "${GREEN_BOLD} ==> Stage 1: Kernel + NVIDIA Setup${RESET}"
+    echo -e "${GREEN_BOLD} ==> Stage 1: Kernel + Drivers Setup${RESET}"
     echo -e "${GREEN_BOLD} ==> Starting in 3 seconds...${RESET}"
     sleep 3
 
@@ -125,9 +125,9 @@ stage_1() {
     echo -e "${GREEN_BOLD} ==> Installing CachyOS kernel...${RESET}"
     pacman -S --noconfirm linux-cachyos linux-cachyos-headers
 
-    echo -e "${GREEN_BOLD} ==> Installing chwd & detecting Nvidia hardware...${RESET}"
+    echo -e "${GREEN_BOLD} ==> Installing chwd & detecting graphics hardware...${RESET}"
     pacman -S --noconfirm chwd
-    chwd -a pci nonfree 0300
+    chwd -a
 
     echo -e "${GREEN_BOLD} ==> Updating mkinitcpio modules...${RESET}"
     add_modules_to_mkinitcpio
