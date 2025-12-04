@@ -14,7 +14,7 @@ Prerequisites
 What does this install?
 - CachyOS optimized repositories - [wiki](https://wiki.cachyos.org/features/optimized_repos/)
 - CachyOS linux kernel - [repo](https://github.com/CachyOS/linux-cachyos) [wiki](https://wiki.cachyos.org/features/kernel/)
-- CachyOS settings - [repo]https://github.com/CachyOS/CachyOS-Settings [wiki](https://wiki.cachyos.org/features/optimized_repos/)
+- CachyOS settings - [repo](https://github.com/CachyOS/CachyOS-Settings) [wiki](https://wiki.cachyos.org/features/optimized_repos/)
 - CachyOS NVIDIA Drivers
 - Wayland and KDE Plasma
 - Minimal desktop KDE packages (dolphin, konsole, kate, spectacle, ark, gwenview)
@@ -30,3 +30,5 @@ Installation
 - ./archtimize.sh
 
 Be sure you add game-performance to your launch options for all of your games to reap the benefits of the power profile optimizations!
+
+Tutorial on how to enable secure boot support coming soon
