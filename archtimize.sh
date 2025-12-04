@@ -40,6 +40,7 @@ create_systemd_service() {
 Description=Archtimize Installer After Reboot
 After=network-online.target getty@tty1.service
 Requires=getty@tty1.service
+Before=graphical.target
 Wants=network-online.target
 
 [Service]
