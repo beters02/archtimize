@@ -18,13 +18,13 @@ fi
 copy_installer_dir() {
     echo -e "${GREEN_BOLD} ==> Preparing installer directory...${RESET}"
 
-    sudo -u "$REALUSER" mkdir -p "$INSTALL_DIR"
+    mkdir -p "$INSTALL_DIR"
 
     # Copy entire folder containing this script
     local src_dir
     src_dir="$(cd "$(dirname "$0")" && pwd)"
 
-    sudo -u "$REALUSER" cp -r "$src_dir"/* "$INSTALL_DIR"/
+    cp -r "$src_dir"/* "$INSTALL_DIR"/
 
     # Ensure main script is executable
     sudo -u "$REALUSER" chmod +x "$INSTALLER_TARGET"
