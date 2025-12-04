@@ -1,6 +1,20 @@
 local fs = require("@lune/fs")
 local move = {}
 
+-- move files cross device (different mount points) if necessary
+local function safeMove(from, to)
+    local ok = pcall(function()
+        fs.move(from, to)
+    end)
+
+    if not ok then
+        print("Moving files cross-device. This usually happens when theres multiple partitions or mount points.")
+        local data = fs.readFile(from)
+        fs.writeFile(to, data)
+        fs.removeFile(from)
+    end
+end
+
 local function recurse(fromDir, toDir, v)
     local newFromDir = fromDir.."/"..v
     local newToDir = toDir.."/"..v
@@ -32,7 +46,7 @@ getMovePaths("etc")
 
 for i, v in pairs(move) do
     if fs.isFile(v.to) then
-        fs.move(v.to, v.to .. "_cos_backup") -- create a backup of the current setting file
+        safeMove(v.to, v.to .. "_cos_backup") -- create a backup of the current setting file
     end
-    fs.move(v.from, v.to)
+    safeMove(v.from, v.to)
 end

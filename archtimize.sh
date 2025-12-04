@@ -53,7 +53,7 @@ cd ..
 rm -rf yay-bin
 
 echo -e "${GREEN_BOLD} ==> Installing Lune from AUR...${RESET}"
-sudo -u "$REALUSER" yay -S --noconfirm lune-bin
+yay -S --noconfirm lune-bin
 
 echo -e "${GREEN_BOLD} ==> Running CachyOS settings installer with Lune...${RESET}"
 cd install-cachyos-settings
