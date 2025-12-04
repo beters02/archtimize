@@ -10,7 +10,8 @@ RESET="\e[0m"
 
 # REQUIRE ROOT
 if [[ $EUID -ne 0 ]]; then
-    echo -e "\e[1;31mThis installer must be run as root.${RESET}"
+    echo -e "\e[1;31mThis installer must be run with sudo or as root.${RESET}"
+    echo -e "\e[4;32mUnsafe commands will automatically be ran in non-sudo.${RESET}"
     exit 1
 fi
 
