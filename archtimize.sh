@@ -36,7 +36,6 @@ install_pam_hook() {
     echo -e "${GREEN_BOLD} ==> Installing PAM auto-resume hook...${RESET}"
 
     # Install wrapper script
-    mkdir -p "$INSTALL_DIR"
     cat <<EOF >"$INSTALL_DIR/pam-wrapper.sh"
 #!/bin/bash
 
