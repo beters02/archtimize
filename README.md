@@ -19,7 +19,7 @@ What does this install?
 - Wayland and KDE Plasma
 - Minimal desktop KDE packages (dolphin, konsole, kate, spectacle, ark, gwenview)
 - KDE-System packages
-- Some basic packages: firefox
+- Some basic packages: firefox, nano
 
 How does this optimize my arch install?
 - wip
