@@ -232,7 +232,7 @@ if [[ -d "/var/lib/archtimize" ]]; then
     fi
 fi
 
-if [[ "$archtimize_states_exist" == "0" || $(get_stage) == "1" ]]; then
+if [[ "$archtimize_states_exists" == "0" || $(get_stage) == "1" ]]; then
     copy_installer_dir
     create_systemd_service
     create_state_file
