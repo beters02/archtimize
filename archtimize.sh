@@ -35,26 +35,28 @@ copy_installer_dir() {
 install_pam_hook() {
     echo -e "${GREEN_BOLD} ==> Installing PAM auto-resume hook...${RESET}"
 
-    # Install wrapper script
     cat <<EOF >"$INSTALL_DIR/pam-wrapper.sh"
 #!/bin/bash
 
 STATE_FILE="/var/lib/archtimize/state"
 
-if [[ -f "\$STATE_FILE" ]] && [[ \$(cat "\$STATE_FILE") == "2" ]]; then
+# Only run stage 2 if stage=2
+if [[ -f "\$STATE_FILE" ]] && [[ "\$(cat "\$STATE_FILE")" == "2" ]]; then
     exec /usr/local/bin/archtimize/archtimize.sh
 fi
+
+exit 0
 EOF
     chmod +x "$INSTALL_DIR/pam-wrapper.sh"
 
     # Add hook to TTY login
     if ! grep -q pam-wrapper.sh /etc/pam.d/login; then
-        echo "session optional pam_exec.so seteuid /usr/local/bin/archtimize/pam-wrapper.sh" >> /etc/pam.d/login
+        sed -i '/^session.*pam_unix.so/i session optional pam_exec.so /usr/local/bin/archtimize/pam-wrapper.sh' /etc/pam.d/login
     fi
 
-    # Add hook to SDDM (graphical login)
-    if ! grep -q pam-wrapper.sh /etc/pam.d/sddm; then
-        echo "session optional pam_exec.so seteuid /usr/local/bin/archtimize/pam-wrapper.sh" >> /etc/pam.d/sddm
+    # Add hook to SDDM
+    if [[ -f /etc/pam.d/sddm ]] && ! grep -q pam-wrapper.sh /etc/pam.d/sddm; then
+        sed -i '/^session.*pam_unix.so/i session optional pam_exec.so /usr/local/bin/archtimize/pam-wrapper.sh' /etc/pam.d/sddm
     fi
 
     echo -e "${GREEN_BOLD} ==> PAM hooks installed.${RESET}"
@@ -255,6 +257,7 @@ case "$(get_stage)" in
     2) stage_2 ;;
     done)
         echo -e "${GREEN_BOLD}Archtimize installation is complete.${RESET}"
+        exit 0
         ;;
     *)
         echo "Unknown installer state."
