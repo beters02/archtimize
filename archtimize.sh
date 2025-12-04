@@ -223,9 +223,16 @@ stage_2() {
 }
 
 # MAIN
-stage=$(get_stage)
 
-if [[ stage == "1" ]]; then
+archtimize_states_exists="0"
+
+if [[ -d "/var/lib/archtimize" ]]; then
+    if [[ -f "$STATE_FILE" ]]; then
+        archtimize_states_exists="1"
+    fi
+fi
+
+if [[ "$archtimize_states_exist" == "0" || $(get_stage) == "1" ]]; then
     copy_installer_dir
     create_systemd_service
     create_state_file
