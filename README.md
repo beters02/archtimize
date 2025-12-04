@@ -7,7 +7,7 @@ Prerequisites
 - Git must be installed
 - No previously installed graphics drivers
 - No previously installed graphical environment or window manager
-- Btrfs preferred
+- Btrfs preferred (make sure use subvolumes and compression is ON)
 - Swap on zram
 - Grub bootloader (support for systemd-boot coming soon)
 
