@@ -5,6 +5,12 @@ local function recurse(fromDir, toDir, v)
     local newFromDir = fromDir.."/"..v
     local newToDir = toDir.."/"..v
     if fs.isDir(newFromDir) then
+
+        -- ensure all directories exist
+        if not fs.isDir(newToDir) then
+            fs.writeDir(newToDir)
+        end
+
         for i, v in pairs(fs.readDir(newFromDir)) do
             recurse(newFromDir, newToDir, v)
         end
