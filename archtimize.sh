@@ -6,6 +6,7 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+REALUSER="${SUDO_USER:-$USER}"
 GREEN_BOLD="\e[1;32m"
 RESET="\e[0m"
 
@@ -47,12 +48,12 @@ echo -e "${GREEN_BOLD} ==> Installing yay...${RESET}"
 pacman -S --needed --noconfirm git base-devel
 git clone https://aur.archlinux.org/yay-bin.git
 cd yay-bin
-makepkg -si --noconfirm
+sudo -u "$REALUSER" makepkg -si --noconfirm
 cd ..
 rm -rf yay-bin
 
 echo -e "${GREEN_BOLD} ==> Installing Lune from AUR...${RESET}"
-yay -S --noconfirm lune-bin
+sudo -u "$REALUSER" yay -S --noconfirm lune-bin
 
 echo -e "${GREEN_BOLD} ==> Running CachyOS settings installer with Lune...${RESET}"
 cd install-cachyos-settings
