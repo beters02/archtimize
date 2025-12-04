@@ -31,34 +31,32 @@ copy_installer_dir() {
     chmod +x "$INSTALLER_TARGET"
 }
 
-# Autoresume with pam
-install_pam_hook() {
-    echo -e "${GREEN_BOLD} ==> Installing PAM auto-resume hook...${RESET}"
+# CREATE SYSTEMD SERVICE
+create_systemd_service() {
+    echo -e "${GREEN_BOLD} ==> Creating systemd auto-resume service...${RESET}"
 
-    cat <<EOF >/etc/pam.d/archtimize
-session optional pam_exec.so seteuid /usr/local/bin/archtimize/pam-wrapper.sh
+    cat <<EOF > /etc/systemd/system/archtimize.service
+[Unit]
+Description=Archtimize Installer After Reboot
+After=network-online.target getty@tty1.service
+Requires=getty@tty1.service
+Before=graphical.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=$INSTALLER_TARGET
+StandardOutput=tty
+StandardError=tty
+TTYPath=/dev/tty1
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
 EOF
 
-    cat <<EOF >"$INSTALL_DIR/pam-wrapper.sh"
-#!/bin/bash
-
-STATE_FILE="/var/lib/archtimize/state"
-
-# Only run stage 2 if state=2
-if [[ -f "\$STATE_FILE" ]] && [[ \$(cat "\$STATE_FILE") == "2" ]]; then
-    exec /usr/local/bin/archtimize/archtimize.sh
-fi
-EOF
-
-    chmod +x "$INSTALL_DIR/pam-wrapper.sh"
-
-    echo -e "${GREEN_BOLD} ==> PAM hook installed.${RESET}"
-}
-
-remove_pam_hook() {
-    echo -e "${GREEN_BOLD} ==> Removing PAM hook...${RESET}"
-    rm -f /etc/pam.d/archtimize
-    rm -f "$INSTALL_DIR/pam-wrapper.sh"
+    systemctl daemon-reload
+    systemctl enable archtimize.service
 }
 
 # STATES
@@ -170,7 +168,6 @@ stage_1() {
     grub-mkconfig -o /boot/grub/grub.cfg
 
     echo -e "${GREEN_BOLD} ==> Stage 1 complete — rebooting in 3 seconds...${RESET}"
-    install_pam_hook
     set_stage 2
     sleep 3
     reboot
@@ -214,8 +211,12 @@ stage_2() {
     lune run main.luau
     cd ..
 
+    echo -e "${GREEN_BOLD} ==> Cleaning systemd service...${RESET}"
+    systemctl disable archtimize.service
+    rm /etc/systemd/system/archtimize.service
+    systemctl daemon-reload
+
     echo -e "${GREEN_BOLD} ==> Running final cleanup...${RESET}"
-    remove_pam_hook
     cleanup_installer
 
     echo -e "${GREEN_BOLD} ==> Installation fully complete — rebooting into KDE!${RESET}"
@@ -235,6 +236,7 @@ fi
 
 if [[ "$archtimize_states_exists" == "0" || $(get_stage) == "1" ]]; then
     copy_installer_dir
+    create_systemd_service
     create_state_file
 fi
 
@@ -249,3 +251,32 @@ case "$(get_stage)" in
         exit 1
         ;;
 esac
+
+install_pam_hook() {
+    echo -e "${GREEN_BOLD} ==> Installing PAM auto-resume hook...${RESET}"
+
+    cat <<EOF >/etc/pam.d/archtimize
+session optional pam_exec.so seteuid /usr/local/bin/archtimize/pam-wrapper.sh
+EOF
+
+    cat <<EOF >"$INSTALL_DIR/pam-wrapper.sh"
+#!/bin/bash
+
+STATE_FILE="/var/lib/archtimize/state"
+
+# Only run stage 2 if state=2
+if [[ -f "\$STATE_FILE" ]] && [[ \$(cat "\$STATE_FILE") == "2" ]]; then
+    exec /usr/local/bin/archtimize/archtimize.sh
+fi
+EOF
+
+    chmod +x "$INSTALL_DIR/pam-wrapper.sh"
+
+    echo -e "${GREEN_BOLD} ==> PAM hook installed.${RESET}"
+}
+
+remove_pam_hook() {
+    echo -e "${GREEN_BOLD} ==> Removing PAM hook...${RESET}"
+    rm -f /etc/pam.d/archtimize
+    rm -f "$INSTALL_DIR/pam-wrapper.sh"
+}
