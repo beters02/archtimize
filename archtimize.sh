@@ -28,7 +28,7 @@ copy_installer_dir() {
     cp -r "$src_dir"/* "$INSTALL_DIR"/
 
     # Ensure main script is executable
-    sudo -u "$REALUSER" chmod +x "$INSTALLER_TARGET"
+    chmod +x "$INSTALLER_TARGET"
 }
 
 # CREATE SYSTEMD SERVICE
