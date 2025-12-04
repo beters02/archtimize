@@ -51,7 +51,7 @@ EOF
 
     # Add hook to TTY login
     if ! grep -q pam-wrapper.sh /etc/pam.d/login; then
-        sed -i '/^session.*pam_unix.so/i session optional pam_exec.so /usr/local/bin/archtimize/pam-wrapper.sh' /etc/pam.d/login
+        echo "session optional pam_exec.so /usr/local/bin/archtimize/pam-wrapper.sh" >> /etc/pam.d/login
     fi
 
     # Add hook to SDDM
@@ -174,6 +174,14 @@ stage_1() {
     pacman -S --noconfirm chwd
     chwd -a
 
+    echo -e "${GREEN_BOLD} ==> Installing yay...${RESET}"
+    pacman -S --needed --noconfirm git base-devel
+    sudo -u "$REALUSER" git clone https://aur.archlinux.org/yay-bin.git
+    cd yay-bin
+    sudo -u "$REALUSER" makepkg -si --noconfirm
+    cd ..
+    rm -rf yay-bin
+
     echo -e "${GREEN_BOLD} ==> Updating mkinitcpio modules...${RESET}"
     add_modules_to_mkinitcpio
 
@@ -182,6 +190,9 @@ stage_1() {
 
     echo -e "${GREEN_BOLD} ==> Updating grub...${RESET}"
     grub-mkconfig -o /boot/grub/grub.cfg
+
+    echo "$REALUSER ALL=(ALL) NOPASSWD: /usr/bin/pacman" >/etc/sudoers.d/99-archtimize-nopasswd
+    chmod 440 /etc/sudoers.d/99-archtimize-nopasswd
 
     echo -e "${GREEN_BOLD} ==> Stage 1 complete — rebooting in 3 seconds...${RESET}"
     install_pam_hook
@@ -209,14 +220,6 @@ stage_2() {
         systemctl enable NetworkManager.service
     fi
 
-    echo -e "${GREEN_BOLD} ==> Installing yay...${RESET}"
-    pacman -S --needed --noconfirm git base-devel
-    sudo -u "$REALUSER" git clone https://aur.archlinux.org/yay-bin.git
-    cd yay-bin
-    sudo -u "$REALUSER" makepkg -si --noconfirm
-    cd ..
-    rm -rf yay-bin
-
     echo -e "${GREEN_BOLD} ==> Installing Lune...${RESET}"
     sudo -u "$REALUSER" yay -S --noconfirm lune-bin
 
@@ -231,6 +234,8 @@ stage_2() {
     echo -e "${GREEN_BOLD} ==> Running final cleanup...${RESET}"
     remove_pam_hook
     cleanup_installer
+
+    rm -f /etc/sudoers.d/99-archtimize-nopasswd
 
     echo -e "${GREEN_BOLD} ==> Installation fully complete — rebooting into KDE!${RESET}"
     set_stage done
