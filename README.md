@@ -19,8 +19,8 @@ What does this install?
 - Wayland and KDE Plasma (plasma-desktop)
 - Minimal desktop KDE packages (dolphin, konsole, kate, spectacle, ark, gwenview)
 - KDE-System packages
-- Btrfs snapshot management packages: snapper
 - Some basic packages: firefox, nano
+- If you have Btrfs, snapper is installed and backups are automatically created before running archtimize.
 
 How does this optimize my arch install?
 - wip
@@ -29,6 +29,9 @@ Installation
 - Clone this repository. git clone https://github.com/beters02/archtimize
 - cd archtimize
 - sudo ./archtimize.sh
+
+Restore from backup with btrfs:
+- Coming soon
 
 Be sure you add game-performance to your launch options for all of your games to reap the benefits of the power profile optimizations!
 

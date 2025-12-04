@@ -73,6 +73,27 @@ get_stage() {
     cat "$STATE_FILE"
 }
 
+# SNAPPER SETUP
+snapper_setup() {
+    echo -e "${GREEN_BOLD} ==> Getting filesystem type...${RESET}"
+    FILESYSTEM_TYPE=$(findmnt -n -o FSTYPE "/")
+
+    echo -e "${GREEN_BOLD} ==> Filesystem type is ${FILESYSTEM_TYPE}...${RESET}"
+
+    if [[ $FILESYSTEM_TYPE == "btrfs" ]]; then
+        echo -e "${GREEN_BOLD} ==> Installing snapper...${RESET}"
+        pacman -S --noconfirm --needed snapper
+
+        echo -e "${GREEN_BOLD} ==> Creating snapper configuration for root and home...${RESET}"
+        snapper -c root create-config /
+        snapper -c home create-config /home
+
+        echo -e "${GREEN_BOLD} ==> Creating snapper backup of root and home...${RESET}"
+        snapper -c root create --description "Pre Archtimize Backup"
+        snapper -c home create --description "Pre Archtimize Backup"
+    fi
+}
+
 # MKINITCPIO MODULES
 add_modules_to_mkinitcpio() {
     echo -e "${GREEN_BOLD} ==> Adding CRC32C modules to mkinitcpio.conf...${RESET}"
@@ -90,6 +111,7 @@ add_modules_to_mkinitcpio() {
     done
 }
 
+# CLEANUP
 cleanup_installer() {
     echo -e "${GREEN_BOLD} ==> Cleaning up installer files...${RESET}"
 
@@ -112,9 +134,11 @@ cleanup_installer() {
 
 # STAGE 1
 stage_1() {
-    echo -e "${GREEN_BOLD} ==> Stage 1: Kernel + Drivers Setup${RESET}"
+    echo -e "${GREEN_BOLD} ==> Stage 1: Snapper + Kernel + Drivers Setup${RESET}"
     echo -e "${GREEN_BOLD} ==> Starting in 3 seconds...${RESET}"
     sleep 3
+
+    snapper_setup
 
     echo -e "${GREEN_BOLD} ==> Installing CachyOS repositories...${RESET}"
     sudo -u "$REALUSER" curl -L https://mirror.cachyos.org/cachyos-repo.tar.xz -o cachyos-repo.tar.xz
