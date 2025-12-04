@@ -209,13 +209,6 @@ stage_2() {
     lune run main.luau
     cd ..
 
-    echo -e "${GREEN_BOLD} ==> Cleaning up systemd service...${RESET}"
-    systemctl disable archtimize.service
-    rm /etc/systemd/system/archtimize.service
-    systemctl daemon-reload
-
-    echo -e "${GREEN_BOLD} ==> Installation complete — rebooting into KDE!${RESET}"
-
     echo -e "${GREEN_BOLD} ==> Cleaning systemd service...${RESET}"
     systemctl disable archtimize.service
     rm /etc/systemd/system/archtimize.service
