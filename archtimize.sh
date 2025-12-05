@@ -220,16 +220,17 @@ stage_2() {
     echo -e "${GREEN_BOLD} ==> Making some choices for you...${RESET}"
     pacman -S --noconfirm konsole kate spectacle ark gwenview kde-system plasma-nm firefox nano
     
-    #if ! pacman -Q "networkmanager" &> /dev/null; then
-    #    echo -e "${GREEN_BOLD} ==> Installing NetworkManager...${RESET}"
-    #    pacman -S --noconfirm networkmanager
-    #    systemctl enable NetworkManager.service
-    #fi
+    if ! pacman -Q "networkmanager" &> /dev/null; then
+        echo -e "${GREEN_BOLD} ==> Installing NetworkManager...${RESET}"
+        pacman -S --noconfirm networkmanager
+        systemctl enable NetworkManager.service
+    fi
 
     echo -e "${GREEN_BOLD} ==> Cloning CachyOS settings...${RESET}"
     sudo -u "$REALUSER" git clone https://github.com/CachyOS/CachyOS-Settings
 
     # remove cachy's dns settings
+    rm -rf CachyOS-Settings/usr/lib/NetworkManager
 
     echo -e "${GREEN_BOLD} ==> Running CachyOS settings installer...${RESET}"
     cd install-cachyos-settings
