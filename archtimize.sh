@@ -135,7 +135,10 @@ ExecStart=/usr/bin/bash -c '
     rm -rf /cachyos-repo* 2>/dev/null || true;
 '
 ExecStartPost=/usr/bin/bash -c '
-    echo ">>> Removing cleanup service...";
+    echo -e "${GREEN_BOLD} ==> Cleaning archtimize on reboot service...${RESET}";
+    systemctl disable archtimize-login.service;
+    rm /etc/systemd/system/archtimize-login.service;
+    echo -e "${GREEN_BOLD} ==> Removing cleanup service...${RESET}";
     rm -f /etc/systemd/system/archtimize-cleanup.service;
     systemctl daemon-reload;
 '
@@ -230,11 +233,6 @@ stage_2() {
     cd install-cachyos-settings
     lune run main.luau
     cd ..
-
-    echo -e "${GREEN_BOLD} ==> Cleaning systemd service...${RESET}"
-    systemctl disable archtimize-login.service
-    rm /etc/systemd/system/archtimize-login.service
-    systemctl daemon-reload
 
     echo -e "${GREEN_BOLD} ==> Installing self-deleting cleanup service...${RESET}"
     create_cleanup_service
