@@ -127,18 +127,18 @@ After=multi-user.target
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/bash -c '
-    echo -e "${GREEN_BOLD} ==> Cleaning installer files...${RESET}";
+    echo -e "==> Cleaning installer files...";
     rm -rf /usr/local/bin/archtimize;
     rm -rf /var/lib/archtimize;
     rm -rf /home/*/.config/archtimize 2>/dev/null || true;
     rm -rf /CachyOS-Settings 2>/dev/null || true;
     rm -rf /cachyos-repo* 2>/dev/null || true;
-'
-ExecStartPost=/usr/bin/bash -c '
-    echo -e "${GREEN_BOLD} ==> Cleaning archtimize on reboot service...${RESET}";
+    echo -e "==> Cleaning archtimize on reboot service...";
     systemctl disable archtimize-login.service;
     rm /etc/systemd/system/archtimize-login.service;
-    echo -e "${GREEN_BOLD} ==> Removing cleanup service...${RESET}";
+'
+ExecStartPost=/usr/bin/bash -c '
+    echo -e "==> Removing cleanup service...";
     rm -f /etc/systemd/system/archtimize-cleanup.service;
     systemctl daemon-reload;
 '
@@ -218,7 +218,7 @@ stage_2() {
     systemctl enable sddm
 
     echo -e "${GREEN_BOLD} ==> Making some choices for you...${RESET}"
-    pacman -S --noconfirm konsole kate spectacle ark gwenview kde-system firefox nano
+    pacman -S --noconfirm konsole kate spectacle ark gwenview kde-system plasma-nm firefox nano
     
     #if ! pacman -Q "networkmanager" &> /dev/null; then
     #    echo -e "${GREEN_BOLD} ==> Installing NetworkManager...${RESET}"
@@ -228,6 +228,8 @@ stage_2() {
 
     echo -e "${GREEN_BOLD} ==> Cloning CachyOS settings...${RESET}"
     sudo -u "$REALUSER" git clone https://github.com/CachyOS/CachyOS-Settings
+
+    # remove cachy's dns settings
 
     echo -e "${GREEN_BOLD} ==> Running CachyOS settings installer...${RESET}"
     cd install-cachyos-settings
