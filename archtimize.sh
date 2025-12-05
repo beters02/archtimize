@@ -52,7 +52,7 @@ StandardError=tty
 TTYPath=/dev/tty1
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=user@${USER_UID}.service
 EOF
 
     systemctl daemon-reload
