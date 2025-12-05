@@ -173,9 +173,6 @@ stage_1() {
     echo -e "${GREEN_BOLD} ==> Installing Lune...${RESET}"
     sudo -u "$REALUSER" yay -S --noconfirm lune-bin
 
-    echo -e "${GREEN_BOLD} ==> Cloning CachyOS settings...${RESET}"
-    sudo -u "$REALUSER" git clone https://github.com/CachyOS/CachyOS-Settings
-
     echo -e "${GREEN_BOLD} ==> Updating mkinitcpio modules...${RESET}"
     add_modules_to_mkinitcpio
 
@@ -210,6 +207,9 @@ stage_2() {
         pacman -S --noconfirm networkmanager
         systemctl enable NetworkManager.service
     fi
+
+    echo -e "${GREEN_BOLD} ==> Cloning CachyOS settings...${RESET}"
+    sudo -u "$REALUSER" git clone https://github.com/CachyOS/CachyOS-Settings
 
     echo -e "${GREEN_BOLD} ==> Running CachyOS settings installer...${RESET}"
     cd install-cachyos-settings
