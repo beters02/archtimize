@@ -127,7 +127,7 @@ After=multi-user.target
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/bash -c '
-    echo ">>> Cleaning installer files...";
+    echo -e "${GREEN_BOLD} ==> Cleaning installer files...${RESET}";
     rm -rf /usr/local/bin/archtimize;
     rm -rf /var/lib/archtimize;
     rm -rf /home/*/.config/archtimize 2>/dev/null || true;
