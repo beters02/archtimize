@@ -43,7 +43,6 @@ create_systemd_service() {
 Description=Archtimize Resume After User Login
 After=user@${USER_UID}.service
 PartOf=user@${USER_UID}.service
-Requires=user@${USER_UID}.service
 
 [Service]
 Type=oneshot
