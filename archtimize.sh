@@ -48,6 +48,7 @@ Requires=user@${USER_UID}.service
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/archtimize/archtimize.sh
+RemainAfterExit=yes
 StandardOutput=tty
 StandardError=tty
 TTYPath=/dev/tty1
