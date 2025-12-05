@@ -118,24 +118,34 @@ add_modules_to_mkinitcpio() {
 }
 
 # CLEANUP
-cleanup_installer() {
-    echo -e "${GREEN_BOLD} ==> Cleaning up installer files...${RESET}"
+create_cleanup_service() {
+    cat <<EOF >/etc/systemd/system/archtimize-cleanup.service
+[Unit]
+Description=Archtimize Final Cleanup After Installer Completes
+After=multi-user.target
 
-    # Remove installer directory
-    if [[ -d "$INSTALL_DIR" ]]; then
-        rm -rf "$INSTALL_DIR"
-    fi
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash -c '
+    echo ">>> Cleaning installer files...";
+    rm -rf /usr/local/bin/archtimize;
+    rm -rf /var/lib/archtimize;
+    rm -rf /home/*/.config/archtimize 2>/dev/null || true;
+    rm -rf /CachyOS-Settings 2>/dev/null || true;
+    rm -rf /cachyos-repo* 2>/dev/null || true;
+'
+ExecStartPost=/usr/bin/bash -c '
+    echo ">>> Removing cleanup service...";
+    rm -f /etc/systemd/system/archtimize-cleanup.service;
+    systemctl daemon-reload;
+'
 
-    # Remove state directory
-    if [[ -d /var/lib/archtimize ]]; then
-        rm -rf /var/lib/archtimize
-    fi
+[Install]
+WantedBy=multi-user.target
+EOF
 
-    # Remove leftover CachyOS repo folders
-    rm -rf cachyos-repo* 2>/dev/null || true
-    rm -rf CachyOS-Settings 2>/dev/null || true
-
-    echo -e "${GREEN_BOLD} ==> Cleanup complete.${RESET}"
+    systemctl daemon-reload
+    systemctl enable archtimize-cleanup.service
 }
 
 # STAGE 1
@@ -221,10 +231,10 @@ stage_2() {
     rm /etc/systemd/system/archtimize-login.service
     systemctl daemon-reload
 
-    echo -e "${GREEN_BOLD} ==> Running final cleanup...${RESET}"
-    cleanup_installer
+    echo -e "${GREEN_BOLD} ==> Installing self-deleting cleanup service...${RESET}"
+    create_cleanup_service
 
-    echo -e "${GREEN_BOLD} ==> Installation fully complete — rebooting into KDE in 3 seconds!...${RESET}"
+    echo -e "${GREEN_BOLD} ==> Installation complete, cleanup will finish after next reboot. Rebooting into KDE in 3 seconds!...${RESET}"
     set_stage done
     sleep 3
     reboot
