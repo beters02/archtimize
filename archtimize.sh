@@ -224,8 +224,9 @@ stage_2() {
     echo -e "${GREEN_BOLD} ==> Running final cleanup...${RESET}"
     cleanup_installer
 
-    echo -e "${GREEN_BOLD} ==> Installation fully complete — rebooting into KDE!${RESET}"
+    echo -e "${GREEN_BOLD} ==> Installation fully complete — rebooting into KDE in 3 seconds!...${RESET}"
     set_stage done
+    sleep 3
     reboot
 }
 
