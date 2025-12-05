@@ -1,3 +1,5 @@
+**DO NOT USE THIS AS IT IS A WIP! IT MAY BREAK YOUR LINUX INSTALL!**
+
 Optimize your arch install with a script.
 
 **<ins>Run this on a fresh, vanilla arch install.</ins>**
