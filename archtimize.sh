@@ -207,7 +207,11 @@ stage_2() {
     echo -e "${GREEN_BOLD} ==> 1 second...${RESET}"
     sleep 1
 
-    
+    echo -e "${GREEN_BOLD} ==> Installing chwd...${RESET}"
+    pacman -S --noconfirm chwd
+
+    echo -e "${GREEN_BOLD} ==> Detecting graphics hardware and installing correct headers...${RESET}"
+    chwd -a --list
 
     echo -e "${GREEN_BOLD} ==> Installing chwd & detecting graphics hardware...${RESET}"
     pacman -S --noconfirm chwd
