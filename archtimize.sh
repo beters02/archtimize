@@ -153,7 +153,7 @@ EOF
 
 # STAGE 1
 stage_1() {
-    echo -e "${GREEN_BOLD} ==> Stage 1: Snapper, Kernel, Repos, Password-Requiring Packages{RESET}"
+    echo -e "${GREEN_BOLD} ==> Stage 1: Snapper, Kernel, Repos, Password-Requiring Packages...${RESET}"
     echo -e "${GREEN_BOLD} ==> Starting in 3 seconds...${RESET}"
     sleep 3
 
@@ -199,7 +199,7 @@ stage_1() {
 
 stage_2() {
     cd /usr/local/bin/archtimize
-    echo -e "${GREEN_BOLD} ==> Stage 2: Drivers Setup${RESET}"
+    echo -e "${GREEN_BOLD} ==> Stage 2: Headers and Drivers Setup${RESET}"
     echo -e "${GREEN_BOLD} ==> Starting in 3 seconds...${RESET}"
     sleep 1
     echo -e "${GREEN_BOLD} ==> 2 seconds...${RESET}"
@@ -207,9 +207,11 @@ stage_2() {
     echo -e "${GREEN_BOLD} ==> 1 second...${RESET}"
     sleep 1
 
+    
+
     echo -e "${GREEN_BOLD} ==> Installing chwd & detecting graphics hardware...${RESET}"
     pacman -S --noconfirm chwd
-    chwd -a
+    chwd -a -f
 
     echo -e "${GREEN_BOLD} ==> Updating mkinitcpio modules...${RESET}"
     add_modules_to_mkinitcpio
