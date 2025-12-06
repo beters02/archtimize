@@ -182,6 +182,15 @@ stage_1() {
     echo -e "${GREEN_BOLD} ==> Installing Lune...${RESET}"
     sudo -u "$REALUSER" yay -S --noconfirm lune-bin
 
+    echo -e "${GREEN_BOLD} ==> Updating mkinitcpio modules...${RESET}"
+    add_modules_to_mkinitcpio
+
+    echo -e "${GREEN_BOLD} ==> Regenerating initramfs...${RESET}"
+    mkinitcpio -P
+
+    echo -e "${GREEN_BOLD} ==> Updating grub...${RESET}"
+    grub-mkconfig -o /boot/grub/grub.cfg
+
     echo -e "${GREEN_BOLD} ==> Stage 1 complete — rebooting in 3 seconds...${RESET}"
     set_stage 2
     sleep 3
@@ -191,6 +200,13 @@ stage_1() {
 stage_2() {
     cd /usr/local/bin/archtimize
     echo -e "${GREEN_BOLD} ==> Stage 2: Drivers Setup${RESET}"
+    echo -e "${GREEN_BOLD} ==> Starting in 3 seconds...${RESET}"
+    sleep 1
+    echo -e "${GREEN_BOLD} ==> 2 seconds...${RESET}"
+    sleep 1
+    echo -e "${GREEN_BOLD} ==> 1 second...${RESET}"
+    sleep 1
+
     echo -e "${GREEN_BOLD} ==> Installing chwd & detecting graphics hardware...${RESET}"
     pacman -S --noconfirm chwd
     chwd -a
