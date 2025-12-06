@@ -1,3 +1,6 @@
+# potential fix for wrong header files:
+# reboot after installing the cachyos kernel, then install graphics drivers from chwd 
+
 #!/bin/bash
 set -euo pipefail
 
@@ -153,7 +156,7 @@ EOF
 
 # STAGE 1
 stage_1() {
-    echo -e "${GREEN_BOLD} ==> Stage 1: Snapper + Kernel + Drivers Setup${RESET}"
+    echo -e "${GREEN_BOLD} ==> Stage 1: Snapper, Kernel, Repos, Password-Requiring Packages{RESET}"
     echo -e "${GREEN_BOLD} ==> Starting in 3 seconds...${RESET}"
     sleep 3
 
@@ -171,10 +174,6 @@ stage_1() {
     echo -e "${GREEN_BOLD} ==> Installing CachyOS kernel...${RESET}"
     pacman -S --noconfirm linux-cachyos linux-cachyos-headers
 
-    echo -e "${GREEN_BOLD} ==> Installing chwd & detecting graphics hardware...${RESET}"
-    pacman -S --noconfirm chwd
-    chwd -a
-
     echo -e "${GREEN_BOLD} ==> Installing yay...${RESET}"
     pacman -S --needed --noconfirm git base-devel
     sudo -u "$REALUSER" git clone https://aur.archlinux.org/yay-bin.git
@@ -186,6 +185,18 @@ stage_1() {
     echo -e "${GREEN_BOLD} ==> Installing Lune...${RESET}"
     sudo -u "$REALUSER" yay -S --noconfirm lune-bin
 
+    echo -e "${GREEN_BOLD} ==> Stage 1 complete — rebooting in 3 seconds...${RESET}"
+    set_stage 2
+    sleep 3
+    reboot
+}
+
+stage_2() {
+    echo -e "${GREEN_BOLD} ==> Stage 2: Drivers Setup${RESET}"
+    echo -e "${GREEN_BOLD} ==> Installing chwd & detecting graphics hardware...${RESET}"
+    pacman -S --noconfirm chwd
+    chwd -a
+
     echo -e "${GREEN_BOLD} ==> Updating mkinitcpio modules...${RESET}"
     add_modules_to_mkinitcpio
 
@@ -195,17 +206,17 @@ stage_1() {
     echo -e "${GREEN_BOLD} ==> Updating grub...${RESET}"
     grub-mkconfig -o /boot/grub/grub.cfg
 
-    echo -e "${GREEN_BOLD} ==> Stage 1 complete — rebooting in 3 seconds...${RESET}"
-    set_stage 2
+    echo -e "${GREEN_BOLD} ==> Stage 2 complete — rebooting in 3 seconds...${RESET}"
+    set_stage 3
     sleep 3
     reboot
 }
 
-# STAGE 2
-stage_2() {
+# STAGE 3
+stage_3() {
     cd /usr/local/bin/archtimize
 
-    echo -e "${GREEN_BOLD} ==> Stage 2: GUI + Packages + CachyOS Settings${RESET}"
+    echo -e "${GREEN_BOLD} ==> Stage 3: GUI + Packages + CachyOS Settings${RESET}"
     echo -e "${GREEN_BOLD} ==> Starting in 3 seconds...${RESET}"
     sleep 1
     echo -e "${GREEN_BOLD} ==> 2 seconds...${RESET}"
@@ -265,6 +276,7 @@ fi
 case "$(get_stage)" in
     1) stage_1 ;;
     2) stage_2 ;;
+    3) stage_3 ;;
     done)
         echo -e "${GREEN_BOLD}Archtimize installation is complete.${RESET}"
         ;;
