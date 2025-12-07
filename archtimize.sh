@@ -117,6 +117,7 @@ add_modules_to_mkinitcpio() {
     done
 }
 
+# SAFE CHWD
 safe_chwd_driver_setup() {
     echo -e "${GREEN_BOLD} ==> Preparing safe graphics driver setup (chwd)...${RESET}"
 
@@ -132,7 +133,7 @@ safe_chwd_driver_setup() {
     if ! pacman -Q linux-cachyos linux-cachyos-headers &>/dev/null; then
         echo -e "\e[1;31m[ERROR]\e[0m linux-cachyos and linux-cachyos-headers are not both installed."
         echo "       Archtimize will NOT run chwd -a to avoid broken driver modules."
-        echo "       Fix: pacman -S linux-cachyos linux-cachyos-headers, reboot, then rerun Archtimize.${RESET}"
+        echo "       Fix: pacman -S linux-cachyos linux-cachyos-headers, reboot, Archtimize will start again automatically after logging in.${RESET}"
         exit 1
     fi
 
@@ -142,7 +143,7 @@ safe_chwd_driver_setup() {
     if ! grep -qi "cachyos" <<<"$current_kernel"; then
         echo -e "\e[1;31m[ERROR]\e[0m Currently running kernel is '$current_kernel' (not a CachyOS kernel)."
         echo "       If you just installed linux-cachyos, you must reboot into it before installing drivers."
-        echo "       Fix: reboot, boot the linux-cachyos entry, then rerun Archtimize.${RESET}"
+        echo "       Fix: reboot, boot the linux-cachyos entry, Archtimize will start again automatically after logging in.${RESET}"
         exit 1
     fi
 
@@ -153,7 +154,7 @@ safe_chwd_driver_setup() {
     if [[ "$kver" != "$hver" ]]; then
         echo -e "\e[1;31m[ERROR]\e[0m linux-cachyos ($kver) and linux-cachyos-headers ($hver) versions do not match."
         echo "       This can cause 'unknown module nvidia, nvidia_drm, ...' and broken initramfs."
-        echo "       Fix: pacman -S linux-cachyos linux-cachyos-headers, reboot, then rerun Archtimize."
+        echo "       Fix: pacman -S linux-cachyos linux-cachyos-headers, reboot, Archtimize will start again automatically after logging in."
         exit 1
     fi
 
@@ -166,6 +167,26 @@ safe_chwd_driver_setup() {
 
     echo -e "${GREEN_BOLD} ==> All pre-checks passed. Running chwd -a to install graphics drivers...${RESET}"
     chwd -a
+}
+
+# WAIT FOR INTERNET (for cases where networkmanager isnt completely started.)
+wait_for_internet() {
+    echo -e "${GREEN_BOLD} ==> Waiting for internet connection...${RESET}"
+
+    # Try up to 20 times (~20 seconds)
+    for i in {1..20}; do
+        if ping -c1 archlinux.org &>/dev/null; then
+            echo -e "${GREEN_BOLD} ==> Internet is online!${RESET}"
+            return 0
+        fi
+        echo "   Still offline... retrying ($i/20)"
+        sleep 1
+    done
+
+    echo -e "\e[1;31m[ERROR]\e[0m Internet not available after waiting."
+    echo "Make sure your network is connected and rerun the installer."
+    echo "To rerun, do: sudo ./usr/local/bin/archtimize/archtimize.sh"
+    exit 1
 }
 
 # CLEANUP
@@ -238,6 +259,12 @@ stage_1() {
     echo -e "${GREEN_BOLD} ==> Installing Lune...${RESET}"
     sudo -u "$REALUSER" yay -S --noconfirm lune-bin
 
+    if ! pacman -Q "networkmanager" &> /dev/null; then
+        echo -e "${GREEN_BOLD} ==> Installing NetworkManager...${RESET}"
+        pacman -S --noconfirm networkmanager
+        systemctl enable NetworkManager.service
+    fi
+
     echo -e "${GREEN_BOLD} ==> Updating mkinitcpio modules...${RESET}"
     add_modules_to_mkinitcpio
 
@@ -255,6 +282,9 @@ stage_1() {
 
 stage_2() {
     cd /usr/local/bin/archtimize
+
+    wait_for_internet
+
     echo -e "${GREEN_BOLD} ==> Stage 2: Headers and Drivers Setup${RESET}"
     echo -e "${GREEN_BOLD} ==> Starting in 3 seconds...${RESET}"
     sleep 1
@@ -263,27 +293,7 @@ stage_2() {
     echo -e "${GREEN_BOLD} ==> 1 second...${RESET}"
     sleep 1
 
-    #echo -e "${GREEN_BOLD} ==> Installing chwd...${RESET}"
-    #pacman -S --noconfirm chwd
-
-    #echo -e "${GREEN_BOLD} ==> Detecting graphics hardware and installing correct headers...${RESET}"
-    #CHWD_LIST=$(chwd -a --list 2>/dev/null || true)
-
-    #if echo "$CHWD_LIST" | grep -q "nvidia-open"; then
-        
-    #fi
-
-    #echo -e "${GREEN_BOLD} ==> Installing chwd & detecting graphics hardware...${RESET}"
-    #pacman -S --noconfirm chwd
-    #chwd -a
-
     safe_chwd_driver_setup
-
-    #echo -e "${GREEN_BOLD} ==> Updating mkinitcpio modules...${RESET}"
-    #add_modules_to_mkinitcpio
-
-    #echo -e "${GREEN_BOLD} ==> Regenerating initramfs...${RESET}"
-    #mkinitcpio -P
 
     echo -e "${GREEN_BOLD} ==> Updating grub...${RESET}"
     grub-mkconfig -o /boot/grub/grub.cfg
@@ -297,6 +307,8 @@ stage_2() {
 # STAGE 3
 stage_3() {
     cd /usr/local/bin/archtimize
+
+    wait_for_internet
 
     echo -e "${GREEN_BOLD} ==> Stage 3: GUI + Packages + CachyOS Settings${RESET}"
     echo -e "${GREEN_BOLD} ==> Starting in 3 seconds...${RESET}"
@@ -312,12 +324,6 @@ stage_3() {
 
     echo -e "${GREEN_BOLD} ==> Making some choices for you...${RESET}"
     pacman -S --noconfirm konsole kate spectacle ark gwenview kde-system plasma-nm firefox nano
-    
-    if ! pacman -Q "networkmanager" &> /dev/null; then
-        echo -e "${GREEN_BOLD} ==> Installing NetworkManager...${RESET}"
-        pacman -S --noconfirm networkmanager
-        systemctl enable NetworkManager.service
-    fi
 
     echo -e "${GREEN_BOLD} ==> Cloning CachyOS settings...${RESET}"
     sudo -u "$REALUSER" git clone https://github.com/CachyOS/CachyOS-Settings
@@ -332,6 +338,12 @@ stage_3() {
 
     echo -e "${GREEN_BOLD} ==> Installing self-deleting cleanup service...${RESET}"
     create_cleanup_service
+
+    echo -e "${GREEN_BOLD} ==> Regenerating initramfs...${RESET}"
+    mkinitcpio -P
+
+    echo -e "${GREEN_BOLD} ==> Updating grub...${RESET}"
+    grub-mkconfig -o /boot/grub/grub.cfg
 
     echo -e "${GREEN_BOLD} ==> Installation complete, cleanup will finish after next reboot. Rebooting into KDE in 3 seconds!...${RESET}"
     set_stage done
