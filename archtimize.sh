@@ -223,7 +223,7 @@ stage_1() {
     cd ..
 
     echo -e "${GREEN_BOLD} ==> Ranking mirrors and updating system...${RESET}"
-    pacman cachyos-rate-mirrors
+    cachyos-rate-mirrors
     pacman -Syu --noconfirm
 
     echo -e "${GREEN_BOLD} ==> Installing CachyOS kernel...${RESET}"
