@@ -222,6 +222,9 @@ stage_1() {
     ./cachyos-repo.sh
     cd ..
 
+    echo -e "${GREEN_BOLD} ==> Installing cachyos-rate-mirrors...${RESET}"
+    pacman -S cachyos-rate-mirrors
+
     echo -e "${GREEN_BOLD} ==> Ranking mirrors and updating system...${RESET}"
     cachyos-rate-mirrors
     pacman -Syu --noconfirm
