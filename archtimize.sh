@@ -121,33 +121,33 @@ safe_chwd_driver_setup() {
     echo -e "${GREEN_BOLD} ==> Preparing safe graphics driver setup (chwd)...${RESET}"
 
     # 1. Make sure chwd is installed
-    echo "${GREEN_BOLD} ==> Verifying installation of chwd...${RESET}"
+    echo -e "${GREEN_BOLD} ==> Verifying installation of chwd...${RESET}"
     if ! command -v chwd &>/dev/null; then
         echo -e "${GREEN_BOLD} ==> Installing chwd hardware detection tool...${RESET}"
         pacman -S --noconfirm --needed chwd
     fi
 
     # 2. Check that linux-cachyos + headers are installed
-    echo "${GREEN_BOLD} ==> Verifying installation of kernel and headers...${RESET}"
+    echo -e "${GREEN_BOLD} ==> Verifying installation of kernel and headers...${RESET}"
     if ! pacman -Q linux-cachyos linux-cachyos-headers &>/dev/null; then
         echo -e "\e[1;31m[ERROR]\e[0m linux-cachyos and linux-cachyos-headers are not both installed."
         echo "       Archtimize will NOT run chwd -a to avoid broken driver modules."
-        echo "       Fix: pacman -S linux-cachyos linux-cachyos-headers, reboot, then rerun Archtimize."
+        echo "       Fix: pacman -S linux-cachyos linux-cachyos-headers, reboot, then rerun Archtimize.${RESET}"
         exit 1
     fi
 
     # 3. Check that the *running* kernel is actually the CachyOS one
-    echo "${GREEN_BOLD} ==> Verifying CachyOS kernel is running...${RESET}"
+    echo -e "${GREEN_BOLD} ==> Verifying CachyOS kernel is running...${RESET}"
     current_kernel="$(uname -r)"
     if ! grep -qi "cachyos" <<<"$current_kernel"; then
         echo -e "\e[1;31m[ERROR]\e[0m Currently running kernel is '$current_kernel' (not a CachyOS kernel)."
         echo "       If you just installed linux-cachyos, you must reboot into it before installing drivers."
-        echo "       Fix: reboot, boot the linux-cachyos entry, then rerun Archtimize."
+        echo "       Fix: reboot, boot the linux-cachyos entry, then rerun Archtimize.${RESET}"
         exit 1
     fi
 
     # 4. Optional sanity check: versions of kernel vs headers match
-    echo "${GREEN_BOLD} ==> Verfying versions of kernel and headers match...${RESET}"
+    echo -e "${GREEN_BOLD} ==> Verfying versions of kernel and headers match...${RESET}"
     kver="$(pacman -Q linux-cachyos | awk '{print $2}')"
     hver="$(pacman -Q linux-cachyos-headers | awk '{print $2}')"
     if [[ "$kver" != "$hver" ]]; then
@@ -157,21 +157,12 @@ safe_chwd_driver_setup() {
         exit 1
     fi
 
-    echo -e "${GREEN_BOLD} ==> chwd dry-run: showing what drivers would be installed...${RESET}"
-    if ! chwd -a --list > /tmp/chwd-plan; then
-        echo -e "\e[1;31m[ERROR]\e[0m chwd -a --list failed. Refusing to install drivers automatically."
-        echo "       Check: chwd is installed and CachyOS repositories are configured correctly."
-        exit 1
-    fi
-
-    cat /tmp/chwd-plan
-
-    # Example extra logic: handle NVIDIA-open case if you want to hook headers or dkms
-    if grep -qi "nvidia-open" /tmp/chwd-plan; then
-        echo -e "${GREEN_BOLD} ==> Detected NVIDIA-open drivers in chwd plan.${RESET}"
-        # At this point, headers are already checked above, so we just continue.
-        # If you want more logic (e.g. dkms), you can add it here.
-    fi
+    #echo -e "${GREEN_BOLD} ==> chwd dry-run: showing what drivers would be installed...${RESET}"
+    #if ! chwd -a --list > /tmp/chwd-plan; then
+        #echo -e "\e[1;31m[ERROR]\e[0m chwd -a --list failed. Refusing to install drivers automatically."
+        #echo "       Check: chwd is installed and CachyOS repositories are configured correctly."
+        #exit 1
+    #fi
 
     echo -e "${GREEN_BOLD} ==> All pre-checks passed. Running chwd -a to install graphics drivers...${RESET}"
     chwd -a
