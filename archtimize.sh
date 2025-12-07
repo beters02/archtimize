@@ -121,12 +121,14 @@ safe_chwd_driver_setup() {
     echo -e "${GREEN_BOLD} ==> Preparing safe graphics driver setup (chwd)...${RESET}"
 
     # 1. Make sure chwd is installed
+    echo "${GREEN_BOLD} ==> Verifying installation of chwd...${RESET}"
     if ! command -v chwd &>/dev/null; then
         echo -e "${GREEN_BOLD} ==> Installing chwd hardware detection tool...${RESET}"
         pacman -S --noconfirm --needed chwd
     fi
 
     # 2. Check that linux-cachyos + headers are installed
+    echo "${GREEN_BOLD} ==> Verifying installation of kernel and headers...${RESET}"
     if ! pacman -Q linux-cachyos linux-cachyos-headers &>/dev/null; then
         echo -e "\e[1;31m[ERROR]\e[0m linux-cachyos and linux-cachyos-headers are not both installed."
         echo "       Archtimize will NOT run chwd -a to avoid broken driver modules."
@@ -135,6 +137,7 @@ safe_chwd_driver_setup() {
     fi
 
     # 3. Check that the *running* kernel is actually the CachyOS one
+    echo "${GREEN_BOLD} ==> Verifying CachyOS kernel is running...${RESET}"
     current_kernel="$(uname -r)"
     if ! grep -qi "cachyos" <<<"$current_kernel"; then
         echo -e "\e[1;31m[ERROR]\e[0m Currently running kernel is '$current_kernel' (not a CachyOS kernel)."
@@ -144,6 +147,7 @@ safe_chwd_driver_setup() {
     fi
 
     # 4. Optional sanity check: versions of kernel vs headers match
+    echo "${GREEN_BOLD} ==> Verfying versions of kernel and headers match...${RESET}"
     kver="$(pacman -Q linux-cachyos | awk '{print $2}')"
     hver="$(pacman -Q linux-cachyos-headers | awk '{print $2}')"
     if [[ "$kver" != "$hver" ]]; then
@@ -154,7 +158,7 @@ safe_chwd_driver_setup() {
     fi
 
     echo -e "${GREEN_BOLD} ==> chwd dry-run: showing what drivers would be installed...${RESET}"
-    if ! chwd -a --list > /tmp/chwd-plan 2>/dev/null; then
+    if ! chwd -a --list > /tmp/chwd-plan; then
         echo -e "\e[1;31m[ERROR]\e[0m chwd -a --list failed. Refusing to install drivers automatically."
         echo "       Check: chwd is installed and CachyOS repositories are configured correctly."
         exit 1
