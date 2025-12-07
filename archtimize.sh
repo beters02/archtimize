@@ -77,7 +77,6 @@ get_stage() {
 }
 
 # SNAPPER SETUP
-# SNAPPER SETUP
 setup_snapper() {
     echo -e "${GREEN_BOLD} ==> Getting filesystem type...${RESET}"
     FILESYSTEM_TYPE=$(findmnt -n -o FSTYPE "/")
@@ -100,6 +99,7 @@ setup_snapper() {
         snapper -c home create --description "Pre Archtimize Backup"
     fi
 }
+
 # MKINITCPIO MODULES
 add_modules_to_mkinitcpio() {
     echo -e "${GREEN_BOLD} ==> Adding CRC32C modules to mkinitcpio.conf...${RESET}"
@@ -115,6 +115,62 @@ add_modules_to_mkinitcpio() {
             sed -i "s/^MODULES=(/MODULES=($mod /" /etc/mkinitcpio.conf
         fi
     done
+}
+
+safe_chwd_driver_setup() {
+    echo -e "${GREEN_BOLD} ==> Preparing safe graphics driver setup (chwd)...${RESET}"
+
+    # 1. Make sure chwd is installed
+    if ! command -v chwd &>/dev/null; then
+        echo -e "${GREEN_BOLD} ==> Installing chwd hardware detection tool...${RESET}"
+        pacman -S --noconfirm --needed chwd
+    fi
+
+    # 2. Check that linux-cachyos + headers are installed
+    if ! pacman -Q linux-cachyos linux-cachyos-headers &>/dev/null; then
+        echo -e "\e[1;31m[ERROR]\e[0m linux-cachyos and linux-cachyos-headers are not both installed."
+        echo "       Archtimize will NOT run chwd -a to avoid broken driver modules."
+        echo "       Fix: pacman -S linux-cachyos linux-cachyos-headers, reboot, then rerun Archtimize."
+        exit 1
+    fi
+
+    # 3. Check that the *running* kernel is actually the CachyOS one
+    current_kernel="$(uname -r)"
+    if ! grep -qi "cachyos" <<<"$current_kernel"; then
+        echo -e "\e[1;31m[ERROR]\e[0m Currently running kernel is '$current_kernel' (not a CachyOS kernel)."
+        echo "       If you just installed linux-cachyos, you must reboot into it before installing drivers."
+        echo "       Fix: reboot, boot the linux-cachyos entry, then rerun Archtimize."
+        exit 1
+    fi
+
+    # 4. Optional sanity check: versions of kernel vs headers match
+    kver="$(pacman -Q linux-cachyos | awk '{print $2}')"
+    hver="$(pacman -Q linux-cachyos-headers | awk '{print $2}')"
+    if [[ "$kver" != "$hver" ]]; then
+        echo -e "\e[1;31m[ERROR]\e[0m linux-cachyos ($kver) and linux-cachyos-headers ($hver) versions do not match."
+        echo "       This can cause 'unknown module nvidia, nvidia_drm, ...' and broken initramfs."
+        echo "       Fix: pacman -S linux-cachyos linux-cachyos-headers, reboot, then rerun Archtimize."
+        exit 1
+    fi
+
+    echo -e "${GREEN_BOLD} ==> chwd dry-run: showing what drivers would be installed...${RESET}"
+    if ! chwd -a --list > /tmp/chwd-plan 2>/dev/null; then
+        echo -e "\e[1;31m[ERROR]\e[0m chwd -a --list failed. Refusing to install drivers automatically."
+        echo "       Check: chwd is installed and CachyOS repositories are configured correctly."
+        exit 1
+    fi
+
+    cat /tmp/chwd-plan
+
+    # Example extra logic: handle NVIDIA-open case if you want to hook headers or dkms
+    if grep -qi "nvidia-open" /tmp/chwd-plan; then
+        echo -e "${GREEN_BOLD} ==> Detected NVIDIA-open drivers in chwd plan.${RESET}"
+        # At this point, headers are already checked above, so we just continue.
+        # If you want more logic (e.g. dkms), you can add it here.
+    fi
+
+    echo -e "${GREEN_BOLD} ==> All pre-checks passed. Running chwd -a to install graphics drivers...${RESET}"
+    chwd -a
 }
 
 # CLEANUP
@@ -166,10 +222,12 @@ stage_1() {
     ./cachyos-repo.sh
     cd ..
 
+    echo -e "${GREEN_BOLD} ==> Ranking mirrors and updating system...${RESET}"
+    pacman cachyos-rate-mirrors
     pacman -Syu --noconfirm
 
     echo -e "${GREEN_BOLD} ==> Installing CachyOS kernel...${RESET}"
-    pacman -S --noconfirm linux-cachyos linux-cachyos-headers
+    pacman -Syu --noconfirm linux-cachyos linux-cachyos-headers
 
     echo -e "${GREEN_BOLD} ==> Installing yay...${RESET}"
     pacman -S --needed --noconfirm git base-devel
@@ -207,21 +265,27 @@ stage_2() {
     echo -e "${GREEN_BOLD} ==> 1 second...${RESET}"
     sleep 1
 
-    echo -e "${GREEN_BOLD} ==> Installing chwd...${RESET}"
-    pacman -S --noconfirm chwd
+    #echo -e "${GREEN_BOLD} ==> Installing chwd...${RESET}"
+    #pacman -S --noconfirm chwd
 
-    echo -e "${GREEN_BOLD} ==> Detecting graphics hardware and installing correct headers...${RESET}"
-    chwd -a --list
+    #echo -e "${GREEN_BOLD} ==> Detecting graphics hardware and installing correct headers...${RESET}"
+    #CHWD_LIST=$(chwd -a --list 2>/dev/null || true)
 
-    echo -e "${GREEN_BOLD} ==> Installing chwd & detecting graphics hardware...${RESET}"
-    pacman -S --noconfirm chwd
-    chwd -a -f
+    #if echo "$CHWD_LIST" | grep -q "nvidia-open"; then
+        
+    #fi
 
-    echo -e "${GREEN_BOLD} ==> Updating mkinitcpio modules...${RESET}"
-    add_modules_to_mkinitcpio
+    #echo -e "${GREEN_BOLD} ==> Installing chwd & detecting graphics hardware...${RESET}"
+    #pacman -S --noconfirm chwd
+    #chwd -a
 
-    echo -e "${GREEN_BOLD} ==> Regenerating initramfs...${RESET}"
-    mkinitcpio -P
+    safe_chwd_driver_setup
+
+    #echo -e "${GREEN_BOLD} ==> Updating mkinitcpio modules...${RESET}"
+    #add_modules_to_mkinitcpio
+
+    #echo -e "${GREEN_BOLD} ==> Regenerating initramfs...${RESET}"
+    #mkinitcpio -P
 
     echo -e "${GREEN_BOLD} ==> Updating grub...${RESET}"
     grub-mkconfig -o /boot/grub/grub.cfg
