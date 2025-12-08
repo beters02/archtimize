@@ -4,6 +4,7 @@ set -euo pipefail
 INSTALL_DIR="/usr/local/bin/archtimize"
 INSTALLER_TARGET="$INSTALL_DIR/archtimize.sh"
 STATE_FILE="/var/lib/archtimize/state"
+PATH_FILE="/var/lib/archtimize/clonedpath"
 REALUSER="${SUDO_USER:-$USER}"
 REALUSER_HOME="$(eval echo ~"$REALUSER")"
 GREEN_BOLD="\e[1;32m"
@@ -64,12 +65,19 @@ EOF
     systemctl enable archtimize-login.service
 }
 
-# STATES
+# STATES / VAR
 create_state_file() {
     mkdir -p /var/lib/archtimize
-    if [[ ! -f "$STATE_FILE" ]]; then
-        echo "1" > "$STATE_FILE"
+
+    if [ -f "$STATE_FILE" ]; then
+        rm "$STATE_FILE"
     fi
+    if [ -f "$PATH_FILE" ]; then
+        rm "$PATH_FILE"
+    fi
+
+    echo "1" > "$STATE_FILE"
+    echo "$(cd "$(dirname "$0")" && pwd)" > "$PATH_FILE"
 }
 
 set_stage() {
@@ -202,47 +210,33 @@ fix_kde_task_manager() {
 
     CONFIG_FILE="$REALUSER_HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
 
-    mkdir -p "$(dirname "$CONFIG_FILE")" || true
-    touch "$CONFIG_FILE" || true
+    mkdir -p "$(dirname "$CONFIG_FILE")"
+    touch "$CONFIG_FILE"
 
-    printf "\n[Containments][3][Applets][6][Configuration][General]\n" >> "$CONFIG_FILE" || true
-    printf "launchers=applications:systemsettings.desktop,preferred://filemanager,preferred://browser,applications:org.kde.konsole.desktop\n" >> "$CONFIG_FILE" || true
+    local header
+    local data
+    header="[Containments][3][Applets][6][Configuration][General]"
+    data="launchers=applications:systemsettings.desktop,preferred://filemanager,preferred://browser,applications:org.kde.konsole.desktop"
 
+    # Escape [ and ] for grep/sed (regex-literal-safe)
+    local esc_header
+    esc_header=$(printf '%s\n' "$header" | sed 's/[][\\/.*^$]/\\&/g')
+
+    # Delete the entire existing block
+    #   - Start at the header
+    #   - Continue deleting until a line beginning with '['
+    if grep -qF "$header" "$CONFIG_FILE"; then
+        sed -i "/^$esc_header$/,/^\[/d" "$CONFIG_FILE"
+    fi
+
+    # Append clean rewritten block
+    printf "\n%s\n%s\n" "$header" "$data" >> "$CONFIG_FILE"
 ) || true
 }
 
-# CLEANUP
-create_cleanup_service() {
-    cat <<EOF >/etc/systemd/system/archtimize-cleanup.service
-[Unit]
-Description=Archtimize Final Cleanup After Installer Completes
-After=multi-user.target
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/bash -c '
-    echo -e "==> Cleaning installer files...";
-    rm -rf /usr/local/bin/archtimize;
-    rm -rf /var/lib/archtimize;
-    rm -rf /home/*/.config/archtimize 2>/dev/null || true;
-    rm -rf /CachyOS-Settings 2>/dev/null || true;
-    rm -rf /cachyos-repo* 2>/dev/null || true;
-    echo -e "==> Cleaning archtimize on reboot service...";
-    systemctl disable archtimize-login.service;
-    rm /etc/systemd/system/archtimize-login.service;
-'
-ExecStartPost=/usr/bin/bash -c '
-    echo -e "==> Removing cleanup service...";
-    rm -f /etc/systemd/system/archtimize-cleanup.service;
-    systemctl daemon-reload;
-'
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    systemctl daemon-reload
-    systemctl enable archtimize-cleanup.service
+start_cleanup() {
+    chmod +x ./cleanup/start_cleanup.sh
+    ./cleanup/start_cleanup.sh
 }
 
 # STAGE 1
@@ -363,15 +357,15 @@ stage_3() {
 
     echo -e "${GREEN_BOLD} ==> Installing custom .bashrc...${RESET}"
     if [ -f ~/.bashrc ]; then
-        mv ~/.bashrc ~/.bashrc_backup
+        mv ~/.bashrc $REALUSER_HOME/.bashrc_backup
     fi
-    mv ./.bashrc ~/.bashrc
+    mv ./.bashrc $REALUSER_HOME/.bashrc
 
     echo -e "${GREEN_BOLD} ==> Making some changes to kde task manager...${RESET}"
     fix_kde_task_manager
 
     echo -e "${GREEN_BOLD} ==> Installing self-deleting cleanup service...${RESET}"
-    create_cleanup_service
+    start_cleanup
 
     echo -e "${GREEN_BOLD} ==> Regenerating initramfs...${RESET}"
     mkinitcpio_cachyos_only -P
