@@ -6,6 +6,8 @@ Optimize your arch install with a script.
 
 *This is meant to be used after a minimal "archinstall" installation*
 
+
+
 Prerequisites
 - Git must be installed
 - No previously installed graphics drivers
