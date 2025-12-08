@@ -5,6 +5,7 @@ INSTALL_DIR="/usr/local/bin/archtimize"
 INSTALLER_TARGET="$INSTALL_DIR/archtimize.sh"
 STATE_FILE="/var/lib/archtimize/state"
 PATH_FILE="/var/lib/archtimize/clonedpath"
+HOME_PATH_FILE="/var/lib/archtimize/homepath"
 REALUSER="${SUDO_USER:-$USER}"
 REALUSER_HOME="$(eval echo ~"$REALUSER")"
 GREEN_BOLD="\e[1;32m"
@@ -70,14 +71,18 @@ create_state_file() {
     mkdir -p /var/lib/archtimize
 
     if [ -f "$STATE_FILE" ]; then
-        rm "$STATE_FILE"
+        rm -f "$STATE_FILE"
     fi
     if [ -f "$PATH_FILE" ]; then
-        rm "$PATH_FILE"
+        rm -f "$PATH_FILE"
+    fi
+    if [ -f "$HOME_PATH_FILE" ]; then
+        rm -f "$HOME_PATH_FILE"
     fi
 
     echo "1" > "$STATE_FILE"
     echo "$(cd "$(dirname "$0")" && pwd)" > "$PATH_FILE"
+    echo "$REALUSER_HOME" > "$HOME_PATH_FILE"
 }
 
 set_stage() {
@@ -201,37 +206,6 @@ mkinitcpio_cachyos_only() {
         echo -e "\e[1;33m[WARNING]\e[0m mkinitcpio preset rebuild failed, retrying safe mode..."
         mkinitcpio -k /boot/vmlinuz-linux-cachyos -g /boot/initramfs-linux-cachyos.img --nohooks modconf || true
     fi
-}
-
-# Fix the applications on kde task manager (get rid of discover app)
-fix_kde_task_manager() {
-(
-    set +e
-
-    CONFIG_FILE="$REALUSER_HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
-
-    mkdir -p "$(dirname "$CONFIG_FILE")"
-    touch "$CONFIG_FILE"
-
-    local header
-    local data
-    header="[Containments][3][Applets][6][Configuration][General]"
-    data="launchers=applications:systemsettings.desktop,preferred://filemanager,preferred://browser,applications:org.kde.konsole.desktop"
-
-    # Escape [ and ] for grep/sed (regex-literal-safe)
-    local esc_header
-    esc_header=$(printf '%s\n' "$header" | sed 's/[][\\/.*^$]/\\&/g')
-
-    # Delete the entire existing block
-    #   - Start at the header
-    #   - Continue deleting until a line beginning with '['
-    if grep -qF "$header" "$CONFIG_FILE"; then
-        sed -i "/^$esc_header$/,/^\[/d" "$CONFIG_FILE"
-    fi
-
-    # Append clean rewritten block
-    printf "\n%s\n%s\n" "$header" "$data" >> "$CONFIG_FILE"
-) || true
 }
 
 start_cleanup() {
@@ -360,9 +334,6 @@ stage_3() {
         mv ~/.bashrc $REALUSER_HOME/.bashrc_backup
     fi
     mv ./.bashrc $REALUSER_HOME/.bashrc
-
-    echo -e "${GREEN_BOLD} ==> Making some changes to kde task manager...${RESET}"
-    fix_kde_task_manager
 
     echo -e "${GREEN_BOLD} ==> Installing self-deleting cleanup service...${RESET}"
     start_cleanup
