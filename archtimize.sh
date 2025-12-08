@@ -359,7 +359,7 @@ stage_3() {
     if [ -f ~/.bashrc ]; then
         mv ~/.bashrc ~/.bashrc_backup
     fi
-    mv .bashrc ~/.bashrc
+    mv ./.bashrc ~/.bashrc
 
     echo -e "${GREEN_BOLD} ==> Making some changes to kde task manager...${RESET}"
     fix_kde_task_manager
