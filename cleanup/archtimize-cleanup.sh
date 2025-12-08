@@ -14,6 +14,20 @@ remove_cloned_dir() {
     rm -rf "$p"
 }
 
+patch_default_panel() {
+(
+    local p
+    p="/usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml"
+    if [ -f $p ]; then
+        rm -f "$p"
+    fi
+    mv /usr/local/bin/archtimize/taskmanager/main.xml "$p"
+) || true
+}
+
+echo "==> Patching default panel..."
+patch_default_panel
+
 echo "==> Cleaning installer files..."
 remove_cloned_dir || true
 rm -rf /usr/local/bin/archtimize
