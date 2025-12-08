@@ -7,15 +7,6 @@ Optimize your arch install with a script.
 *This is meant to be used after a minimal "archinstall" installation*
 
 
-
-Prerequisites
-- Git must be installed
-- No previously installed graphics drivers
-- No previously installed graphical environment or window manager
-- Btrfs preferred (if using archinstall, make sure use subvolumes default layout and compression is ON)
-- Swap on zram preferred
-- Grub bootloader
-
 What does this install?
 - CachyOS optimized repositories - [wiki](https://wiki.cachyos.org/features/optimized_repos/)
 - CachyOS linux kernel - [repo](https://github.com/CachyOS/linux-cachyos) [wiki](https://wiki.cachyos.org/features/kernel/)
@@ -28,6 +19,14 @@ What does this install?
 - If you have Btrfs, snapper is installed and backups are automatically created before running archtimize.
 - NetworkManager if you do not already have it
 - A custom bashrc with nice colors and functions.
+
+Prerequisites
+- Git must be installed
+- No previously installed graphics drivers
+- No previously installed graphical environment or window manager
+- Btrfs preferred (if using archinstall, make sure use subvolumes default layout and compression is ON)
+- Swap on zram preferred
+- Grub bootloader
 
 Installation
 - Clone this repository. git clone https://github.com/beters02/archtimize
