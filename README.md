@@ -2,7 +2,7 @@ Optimize your arch install with a script.
 
 **<ins>Run this on a fresh, vanilla arch install.</ins>**
 *This script will install custom drivers, therefore you cannot have previously installed graphics drivers*
-*This is meant to be used after a minimal "archinstall" installation"
+*This is meant to be used after a minimal "archinstall" installation*
 
 Prerequisites
 - Git must be installed
