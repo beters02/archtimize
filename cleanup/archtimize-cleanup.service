@@ -1,0 +1,11 @@
+[Unit]
+Description=Archtimize Final Cleanup After Installer Completes
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/archtimize-cleanup.sh
+ExecStartPost=/usr/bin/bash -c 'rm -f /etc/systemd/system/archtimize-cleanup.service; rm -f /usr/local/bin/archtimize-cleanup.sh; systemctl daemon-reload'
+
+[Install]
+WantedBy=multi-user.target
