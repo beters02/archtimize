@@ -28,6 +28,9 @@ copy_installer_dir() {
 
     cp -r "$src_dir"/* "$INSTALL_DIR"/
 
+    # manually copy bashrc since its the only dotfile we need
+    cp "$src_dir/.bashrc" "$INSTALL_DIR/.bashrc"
+
     # Ensure main script is executable
     chmod +x "$INSTALLER_TARGET"
 }
@@ -344,8 +347,11 @@ stage_3() {
     echo -e "${GREEN_BOLD} ==> Making some choices for you...${RESET}"
     pacman -S --noconfirm konsole kate spectacle ark gwenview kde-system plasma-nm plasma-systemmonitor firefox nano
 
-    echo -e "${GREEN_BOLD} ==> Cloning CachyOS settings...${RESET}"
-    sudo -u "$REALUSER" git clone https://github.com/CachyOS/CachyOS-Settings
+    # incase your installer broke and cachyos-settings was already installed
+    if [ ! -d CachyOS-Settings ]; then
+        echo -e "${GREEN_BOLD} ==> Cloning CachyOS settings...${RESET}"
+        sudo -u "$REALUSER" git clone https://github.com/CachyOS/CachyOS-Settings
+    fi
 
     # remove cachy's dns settings
     rm -rf CachyOS-Settings/usr/lib/NetworkManager
