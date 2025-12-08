@@ -19,6 +19,7 @@ What does this install?
 - If you have Btrfs, snapper is installed and backups are automatically created before running archtimize.
 - NetworkManager if you do not already have it
 - A custom bashrc with nice colors and functions.
+- Lune for installing CachyOS settings, although this will probably be removed in place for a bash function in the near future.
 
 Prerequisites
 - Git must be installed
@@ -48,3 +49,5 @@ Coming Soon:
 - "How does this optimize my arch install" information
 - "Restore from backup with btrfs" information
 - Potentially an ISO / seperate distro
+
+After the installation is done, the size of the OS is just shy of 30GB.

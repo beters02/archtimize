@@ -57,5 +57,4 @@ for i, v in pairs(move) do
         print(v.to)
         error(errmsg)
     end
-    
 end
