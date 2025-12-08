@@ -24,6 +24,7 @@ What does this install?
 - Some basic packages: firefox, nano
 - If you have Btrfs, snapper is installed and backups are automatically created before running archtimize.
 - NetworkManager if you do not already have it
+- A custom bashrc with nice colors and functions.
 
 How does this optimize my arch install?
 - wip
