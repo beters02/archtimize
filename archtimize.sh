@@ -5,6 +5,7 @@ INSTALL_DIR="/usr/local/bin/archtimize"
 INSTALLER_TARGET="$INSTALL_DIR/archtimize.sh"
 STATE_FILE="/var/lib/archtimize/state"
 REALUSER="${SUDO_USER:-$USER}"
+REALUSER_HOME="$(eval echo ~"$REALUSER")"
 GREEN_BOLD="\e[1;32m"
 RESET="\e[0m"
 
@@ -158,13 +159,6 @@ safe_chwd_driver_setup() {
         exit 1
     fi
 
-    #echo -e "${GREEN_BOLD} ==> chwd dry-run: showing what drivers would be installed...${RESET}"
-    #if ! chwd -a --list > /tmp/chwd-plan; then
-        #echo -e "\e[1;31m[ERROR]\e[0m chwd -a --list failed. Refusing to install drivers automatically."
-        #echo "       Check: chwd is installed and CachyOS repositories are configured correctly."
-        #exit 1
-    #fi
-
     echo -e "${GREEN_BOLD} ==> All pre-checks passed. Running chwd -a to install graphics drivers...${RESET}"
     chwd -a
 }
@@ -187,6 +181,31 @@ wait_for_internet() {
     echo "Make sure your network is connected and rerun the installer."
     echo "To rerun, do: sudo ./usr/local/bin/archtimize/archtimize.sh"
     exit 1
+}
+
+# MKINITCPIO FOR CACHYOS KERNEL ONLY!
+mkinitcpio_cachyos_only() {
+    echo -e "${GREEN_BOLD} ==> Regenerating initramfs (linux-cachyos only)...${RESET}"
+    if ! mkinitcpio -p linux-cachyos; then
+        echo -e "\e[1;33m[WARNING]\e[0m mkinitcpio preset rebuild failed, retrying safe mode..."
+        mkinitcpio -k /boot/vmlinuz-linux-cachyos -g /boot/initramfs-linux-cachyos.img --nohooks modconf || true
+    fi
+}
+
+# Fix the applications on kde task manager (get rid of discover app)
+fix_kde_task_manager() {
+(
+    set +e
+
+    CONFIG_FILE="$REALUSER_HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+
+    mkdir -p "$(dirname "$CONFIG_FILE")" || true
+    touch "$CONFIG_FILE" || true
+
+    printf "\n[Containments][3][Applets][6][Configuration][General]\n" >> "$CONFIG_FILE" || true
+    printf "launchers=applications:systemsettings.desktop,preferred://filemanager,preferred://browser,applications:org.kde.konsole.desktop\n" >> "$CONFIG_FILE" || true
+
+) || true
 }
 
 # CLEANUP
@@ -323,7 +342,7 @@ stage_3() {
     systemctl enable sddm
 
     echo -e "${GREEN_BOLD} ==> Making some choices for you...${RESET}"
-    pacman -S --noconfirm konsole kate spectacle ark gwenview kde-system plasma-nm firefox nano
+    pacman -S --noconfirm konsole kate spectacle ark gwenview kde-system plasma-nm plasma-systemmonitor firefox nano
 
     echo -e "${GREEN_BOLD} ==> Cloning CachyOS settings...${RESET}"
     sudo -u "$REALUSER" git clone https://github.com/CachyOS/CachyOS-Settings
@@ -336,11 +355,20 @@ stage_3() {
     lune run main.luau
     cd ..
 
+    echo -e "${GREEN_BOLD} ==> Installing custom .bashrc...${RESET}"
+    if [ -f ~/.bashrc ]; then
+        mv ~/.bashrc ~/.bashrc_backup
+    fi
+    mv .bashrc ~/.bashrc
+
+    echo -e "${GREEN_BOLD} ==> Making some changes to kde task manager...${RESET}"
+    fix_kde_task_manager
+
     echo -e "${GREEN_BOLD} ==> Installing self-deleting cleanup service...${RESET}"
     create_cleanup_service
 
     echo -e "${GREEN_BOLD} ==> Regenerating initramfs...${RESET}"
-    mkinitcpio -P
+    mkinitcpio_cachyos_only -P
 
     echo -e "${GREEN_BOLD} ==> Updating grub...${RESET}"
     grub-mkconfig -o /boot/grub/grub.cfg
